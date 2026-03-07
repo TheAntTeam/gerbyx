@@ -29,21 +29,15 @@ class GerberParser:
 
             # Gestione Macro in corso
             if self.current_macro_name and kind == 'param':
-                # Controlla se il token è una primitiva di macro
-                # Le primitive iniziano con un numero o un operatore variabile ($)
-                # I comandi standard iniziano con lettere (AD, FS, MO...)
                 is_primitive = re.match(r'^\d', value) or value.startswith('$')
 
                 if is_primitive:
                     self.current_macro_body.append(parse_macro_body(value))
-                    continue # Token consumato dalla macro
+                    continue
                 else:
-                    # Non è una primitiva, quindi la macro è finita.
                     self._finalize_macro()
-                    # Procedi a processare il token corrente come nuovo comando
 
             elif self.current_macro_name and kind != 'param':
-                # Se incontriamo uno statement o altro fuori dai parametri, la macro è finita
                 self._finalize_macro()
 
             # Parsing normale
@@ -54,12 +48,10 @@ class GerberParser:
             elif kind == 'comment':
                 pass
 
-        # Finalizzazione a fine file
         self._finalize_macro()
         self._finalize_ab()
 
     def _parse_param(self, value: str):
-        # Gestione inizio Aperture Block
         if value.startswith("AB"):
             if is_ab_end(value):
                 pass
@@ -68,9 +60,7 @@ class GerberParser:
                 self.current_ab_tokens = []
             return
 
-        # Gestione inizio Macro
         if value.startswith("AM"):
-            # Se per caso c'era una macro aperta (non dovrebbe accadere con la logica sopra), chiudila
             if self.current_macro_name:
                 self._finalize_macro()
 
@@ -79,11 +69,12 @@ class GerberParser:
                 self.current_macro_body = []
             return
 
-        # Altri parametri
         if value.startswith("FS"): self.processor.set_format_spec(parse_format_spec(value))
         elif value.startswith("MO"): self.processor.set_units(parse_units(value).code)
         elif value.startswith("AD"): self.processor.define_aperture(parse_aperture_def(value))
-        elif value.startswith("LP"): pass # TODO
+        elif value.startswith("LP"):
+            polarity = parse_layer_polarity(value)
+            self.processor.set_layer_polarity(polarity.mode)
 
     def _finalize_macro(self):
         if self.current_macro_name:
@@ -96,7 +87,6 @@ class GerberParser:
         if self.current_ab_id:
             ab = ApertureBlock(self.current_ab_id, self.current_ab_tokens)
             self.processor.define_aperture_block(ab)
-            # print(f"Defined Aperture Block: {ab.id}")
             self.current_ab_id = None
             self.current_ab_tokens = []
 
@@ -104,7 +94,6 @@ class GerberParser:
         if value.endswith('*'): value = value[:-1]
         self._handle_g_code(value)
         self._handle_coordinates_and_dcode(value)
-        # M02 gestito implicitamente dalla fine del loop
 
     def _handle_g_code(self, value: str):
         g_codes = re.findall(r'G(\d{2})', value)
@@ -119,7 +108,6 @@ class GerberParser:
 
     def _handle_coordinates_and_dcode(self, value: str):
         def get_val(char, text):
-            # Usa raw string per evitare SyntaxWarning
             match = re.search(rf"{char}([+-]?[\d\.]+)", text)
             if match: return self.processor.parse_value(match.group(1), is_x=(char in ['X', 'I']))
             return None

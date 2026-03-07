@@ -8,17 +8,56 @@ from .units import parse_units
 from .layer_polarity import parse_layer_polarity
 from .macro import Macro, parse_macro_start, parse_macro_body
 from .blocks import ApertureBlock, parse_ab_start, is_ab_end
+from .step_repeat import StepRepeat
+from .logger import debug, info, warning, is_debug_enabled
+
+# Pre-compiled regex patterns for performance
+_G_CODE_PATTERN = re.compile(r'G(\d{2})')
+_COORD_PATTERN = re.compile(r'([XYIJ])([+-]?[\d\.]+)')
+_D_CODE_PATTERN = re.compile(r'D(\d+)')
+_MACRO_PRIMITIVE_PATTERN = re.compile(r'^\d')
+
+# Command lookup table for fast prefix matching
+_PARAM_PREFIXES = {'ADD', 'AB', 'AM', 'LP', 'TA', 'TO', 'TF', 'SR'}
+_PARAM_COMMANDS = {'FS', 'MO', 'AD', 'LP', 'TF', 'TA', 'TO', 'TD', 'AB', 'AM', 'SR'}
 
 class GerberParser:
-    def __init__(self, processor: GerberProcessor):
+    def __init__(self, processor: GerberProcessor, validate_x3: bool = False):
         self.processor = processor
         self.current_macro_name: Optional[str] = None
         self.current_macro_body: list[str] = []
         self.current_ab_id: Optional[str] = None
         self.current_ab_tokens: list[Tuple[str, str]] = []
+        self.validate_x3 = validate_x3
+        self.validator = None
+        
+        if validate_x3:
+            from .validator import GerberValidator
+            self.validator = GerberValidator(strict_x3=True)
 
     def parse(self, tokens: Generator[Tuple[str, str], None, None]):
+        info("Starting Gerber parsing")
+        
+        # Converti generator in lista se serve validazione
+        if self.validate_x3:
+            tokens_list = list(tokens)
+            debug(lambda: f"Validating X3 compliance ({len(tokens_list)} tokens)")
+            if self.validator:
+                is_valid = self.validator.validate(tokens_list)
+                if not is_valid:
+                    warning("X3 validation failed")
+                    print("\n" + self.validator.get_report())
+            tokens = iter(tokens_list)
+        
         for kind, value in tokens:
+            # X3: alcuni comandi possono essere stmt invece di param
+            # Convertiamo ADD, AB, AM, LP, TA, TO, TF in param se sono stmt
+            if kind == 'stmt':
+                for prefix in _PARAM_PREFIXES:
+                    if value.startswith(prefix):
+                        kind = 'param'
+                        break
+            
             # Gestione Aperture Block (AB)
             if self.current_ab_id:
                 if kind == 'param' and is_ab_end(value):
@@ -29,7 +68,7 @@ class GerberParser:
 
             # Gestione Macro in corso
             if self.current_macro_name and kind == 'param':
-                is_primitive = re.match(r'^\d', value) or value.startswith('$')
+                is_primitive = _MACRO_PRIMITIVE_PATTERN.match(value) or value.startswith('$')
 
                 if is_primitive:
                     self.current_macro_body.append(parse_macro_body(value))
@@ -61,6 +100,11 @@ class GerberParser:
             return
 
         if value.startswith("AM"):
+            # X3: %AM*% chiude la macro corrente
+            if value == "AM*":
+                self._finalize_macro()
+                return
+            
             if self.current_macro_name:
                 self._finalize_macro()
 
@@ -69,19 +113,61 @@ class GerberParser:
                 self.current_macro_body = []
             return
 
-        if value.startswith("FS"): self.processor.set_format_spec(parse_format_spec(value))
-        elif value.startswith("MO"): self.processor.set_units(parse_units(value).code)
-        elif value.startswith("AD"):
+        # Fast command dispatch using first 2 chars
+        cmd = value[:2]
+        
+        if cmd == "FS": self.processor.set_format_spec(parse_format_spec(value))
+        elif cmd == "MO": self.processor.set_units(parse_units(value).code)
+        elif cmd == "SR": self._parse_step_repeat(value)
+        elif cmd == "AD":
             try:
                 self.processor.define_aperture(parse_aperture_def(value))
             except ValueError as e:
                 print(f"Error parsing aperture definition '{value}': {e}")
-        elif value.startswith("LP"):
+        elif cmd == "LP":
             polarity = parse_layer_polarity(value)
             self.processor.set_layer_polarity(polarity.mode)
+        elif cmd == "TF" and value[2] == '.': # File Attributes
+            parts = value[3:].split(',', 1)
+            self.processor.set_attribute('file', parts[0], parts[1] if len(parts) > 1 else "")
+        elif cmd == "TA" and value[2] == '.': # Aperture Attributes
+            parts = value[3:].split(',', 1)
+            self.processor.set_attribute('aperture', parts[0], parts[1] if len(parts) > 1 else "")
+        elif cmd == "TO" and value[2] == '.': # Object Attributes (Layer/Component - X3)
+            parts = value[3:].split(',', 1)
+            self.processor.set_attribute('object', parts[0], parts[1] if len(parts) > 1 else "")
+        elif cmd == "TD": # Delete Attributes (X3)
+            if value == "TD*":
+                self.processor.delete_attributes('object')
+            elif value[2] == '.':
+                self.processor.delete_attribute('object', value[3:-1])
+    
+    def _parse_step_repeat(self, value: str):
+        """Parse Step & Repeat command (SR)"""
+        body = value[2:-1]
+        
+        if not body:
+            debug(lambda: "Disabling Step & Repeat")
+            self.processor.set_step_repeat(None)
+            return
+        
+        m = re.match(r'X(\d+)Y(\d+)I([\d\.\+\-]+)J([\d\.\+\-]+)', body)
+        if not m:
+            warning(f"Invalid Step & Repeat format: {value}")
+            return
+        
+        sr = StepRepeat(
+            x_repeat=int(m.group(1)),
+            y_repeat=int(m.group(2)),
+            x_step=float(m.group(3)),
+            y_step=float(m.group(4))
+        )
+        debug(lambda: f"Step & Repeat: {sr.x_repeat}x{sr.y_repeat}, step=({sr.x_step}, {sr.y_step})")
+        self.processor.set_step_repeat(sr)
 
     def _finalize_macro(self):
         if self.current_macro_name:
+            debug(lambda: f"Finalizing macro: {self.current_macro_name} ({len(self.current_macro_body)} primitives)")
             macro = Macro(self.current_macro_name, self.current_macro_body)
             self.processor.define_macro(macro)
             self.current_macro_name = None
@@ -89,6 +175,7 @@ class GerberParser:
 
     def _finalize_ab(self):
         if self.current_ab_id:
+            debug(lambda: f"Finalizing aperture block: {self.current_ab_id} ({len(self.current_ab_tokens)} tokens)")
             ab = ApertureBlock(self.current_ab_id, self.current_ab_tokens)
             self.processor.define_aperture_block(ab)
             self.current_ab_id = None
@@ -96,11 +183,21 @@ class GerberParser:
 
     def _parse_stmt(self, value: str):
         if value.endswith('*'): value = value[:-1]
+        
+        # Gestione commenti inline (X3): es. "G75*G04 comment"
+        if 'G04' in value:
+            # Separa il comando dal commento
+            parts = value.split('G04', 1)
+            if parts[0].strip():
+                value = parts[0].strip()
+            else:
+                return  # Solo commento, ignora
+        
         self._handle_g_code(value)
         self._handle_coordinates_and_dcode(value)
 
     def _handle_g_code(self, value: str):
-        g_codes = re.findall(r'G(\d{2})', value)
+        g_codes = _G_CODE_PATTERN.findall(value)
         for code in g_codes:
             if code == '01': self.processor.set_interpolation_mode('Linear')
             elif code == '02': self.processor.set_interpolation_mode('ClockwiseCircular')
@@ -109,15 +206,25 @@ class GerberParser:
             elif code == '37': self.processor.end_region()
             elif code == '74': self.processor.set_quadrant_mode('Single')
             elif code == '75': self.processor.set_quadrant_mode('Multi')
+        
+        # X3: M02 = End of File (obbligatorio)
+        if 'M02' in value:
+            pass  # Fine file, nessuna azione necessaria
 
     def _handle_coordinates_and_dcode(self, value: str):
-        def get_val(char, text):
-            match = re.search(rf"{char}([+-]?[\d\.]+)", text)
-            if match: return self.processor.parse_value(match.group(1), is_x=(char in ['X', 'I']))
-            return None
-
-        x, y, i, j = get_val('X', value), get_val('Y', value), get_val('I', value), get_val('J', value)
-        d_match = re.search(r'D(\d+)', value)
+        # Parse all coordinates at once with single regex
+        coords = {}
+        for match in _COORD_PATTERN.finditer(value):
+            char = match.group(1)
+            val_str = match.group(2)
+            coords[char] = self.processor.parse_value(val_str, is_x=(char in ['X', 'I']))
+        
+        x = coords.get('X')
+        y = coords.get('Y')
+        i = coords.get('I')
+        j = coords.get('J')
+        
+        d_match = _D_CODE_PATTERN.search(value)
         d_code = int(d_match.group(1)) if d_match else None
 
         if d_code is not None:

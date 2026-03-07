@@ -40,10 +40,11 @@ def parse_aperture_def(value: str) -> Aperture:
     # Esempio: ADD10C,0.5* -> Type C
     # Esempio: ADD10Circle,0.5* -> Type Circle (Macro?)
 
-    # Prendiamo il primo carattere come tipo se è C, R, O, P
+    # Prendiamo il primo carattere come tipo se è C, R, O, P E seguito da virgola o fine
     first_char = rest[0]
 
-    if first_char in ['C', 'R', 'O', 'P']:
+    # Controlla se è un template standard (singolo carattere C, R, O, P)
+    if first_char in ['C', 'R', 'O', 'P'] and (len(rest) == 1 or rest[1] in [',', '*']):
         ap_type = first_char
         params_str = rest[1:]
     else:

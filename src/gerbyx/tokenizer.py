@@ -1,4 +1,6 @@
 from typing import Generator, Tuple
+from .logger import debug, is_debug_enabled
+
 
 def tokenize_gerber(text: str) -> Generator[Tuple[str, str], None, None]:
     """
@@ -11,6 +13,17 @@ def tokenize_gerber(text: str) -> Generator[Tuple[str, str], None, None]:
     - 'stmt': Un comando standard del corpo del file (es. 'G01*', 'X100Y100D02*').
     - 'comment': Un commento G04 (es. 'G04 Questo è un commento*').
     """
+    debug(lambda: f"Tokenizing Gerber file ({len(text)} bytes)")
+    # Pre-processing: rimuovi commenti # (X3)
+    lines = text.split('\n')
+    cleaned_lines = []
+    for line in lines:
+        # Rimuovi commenti # ma mantieni il resto della linea
+        if '#' in line:
+            line = line.split('#')[0]
+        cleaned_lines.append(line)
+    text = '\n'.join(cleaned_lines)
+
     pos = 0
     text_len = len(text)
 

@@ -11,6 +11,8 @@ from .format import FormatSpec
 from .units import Units
 from .macro import Macro
 from .blocks import ApertureBlock
+from .step_repeat import StepRepeat
+from .logger import debug, info, warning, is_debug_enabled, LogContext
 
 class GerberProcessor:
     """
@@ -26,25 +28,89 @@ class GerberProcessor:
         self.current_region_points: List[Tuple[float, float]] = []
         self.macros: Dict[str, Macro] = {}
         self.aperture_blocks: Dict[str, ApertureBlock] = {}
+        self.file_attributes: Dict[str, str] = {}
+        self.layer_attributes: Dict[str, str] = {}
+        self.aperture_attributes: Dict[str, Dict[str, str]] = {}
+        
+        # Cache for lazy geometry computation
+        self._geometries_cache: Optional[List] = None
+        
+        # Cache for aperture shapes (performance optimization)
+        self._aperture_shape_cache: Dict[str, any] = {}
+        
+        # Batch processing threshold
+        self._batch_threshold = 100
+        self._pending_shapes = 0
+        
+        # Step & Repeat state
+        self.step_repeat: Optional[StepRepeat] = None
 
+    def set_step_repeat(self, step_repeat: Optional[StepRepeat]):
+        """Set Step & Repeat parameters (SR command)"""
+        self.step_repeat = step_repeat
+        if step_repeat:
+            debug(lambda: f"Step & Repeat enabled: {step_repeat.x_repeat}x{step_repeat.y_repeat}")
+        else:
+            debug(lambda: "Step & Repeat disabled")
+    
     def set_units(self, units: str):
         self.state.units = Units(units)
+
+    def set_attribute(self, attr_type: Literal['file', 'layer', 'aperture', 'object'], name: str, value: str):
+        if attr_type == 'file':
+            self.file_attributes[name] = value
+        elif attr_type == 'layer':
+            self.layer_attributes[name] = value
+        elif attr_type == 'object':
+            # X3: attributi componente (TO.C, TO.CVal, TO.CMnt, ecc.)
+            self.state.object_attributes[name] = value
+        elif attr_type == 'aperture':
+            if self.state.current_aperture_id:
+                if self.state.current_aperture_id not in self.aperture_attributes:
+                    self.aperture_attributes[self.state.current_aperture_id] = {}
+                self.aperture_attributes[self.state.current_aperture_id][name] = value
+            else:
+                print(f"Warning: Aperture attribute {name}={value} set without active aperture.")
+
+    def delete_attribute(self, attr_type: Literal['file', 'layer', 'aperture', 'object'], name: str):
+        """Cancella un attributo specifico (X3: TD.Nome)"""
+        if attr_type == 'object':
+            self.state.object_attributes.pop(name, None)
+        elif attr_type == 'aperture' and self.state.current_aperture_id:
+            if self.state.current_aperture_id in self.aperture_attributes:
+                self.aperture_attributes[self.state.current_aperture_id].pop(name, None)
+
+    def delete_attributes(self, attr_type: Literal['file', 'layer', 'aperture', 'object']):
+        """Cancella tutti gli attributi di un tipo (X3: TD)"""
+        if attr_type == 'object':
+            self.state.object_attributes.clear()
+        elif attr_type == 'aperture' and self.state.current_aperture_id:
+            if self.state.current_aperture_id in self.aperture_attributes:
+                self.aperture_attributes[self.state.current_aperture_id].clear()
 
     def set_format_spec(self, format_spec: FormatSpec):
         self.state.format_spec = format_spec
 
     def define_aperture(self, aperture: Aperture):
+        debug(lambda: f"Defining aperture {aperture.id}: {aperture.type} {aperture.params}")
         self.state.apertures[aperture.id] = aperture
 
     def define_macro(self, macro: Macro):
+        debug(lambda: f"Defining macro {macro.name} with {len(macro.body)} primitives")
         self.macros[macro.name] = macro
 
     def define_aperture_block(self, block: ApertureBlock):
         self.aperture_blocks[block.id] = block
+        # Registra anche come apertura "virtuale" per permettere la selezione
+        # Usa un tipo speciale 'AB' per distinguerlo
+        from .aperture import Aperture
+        self.state.apertures[block.id] = Aperture(block.id, 'AB', [])
 
     def select_aperture(self, aperture_id: str):
         if aperture_id not in self.state.apertures:
-            print(f"Warning: Aperture {aperture_id} not defined.")
+            warning(f"Aperture {aperture_id} not defined")
+        else:
+            debug(lambda: f"Selected aperture {aperture_id}")
         self.state.current_aperture_id = aperture_id
 
     def set_interpolation_mode(self, mode: str):
@@ -90,45 +156,86 @@ class GerberProcessor:
         self.current_region_points = []
 
     def _add_shape(self, shape):
-        """Aggiunge una forma al layer corrente."""
+        """Aggiunge una forma al layer corrente, applicando Step & Repeat se attivo."""
         if shape and not shape.is_empty:
-            self.layers[-1]['shapes'].append(shape)
+            if self.step_repeat:
+                # Apply Step & Repeat
+                for y_idx in range(self.step_repeat.y_repeat):
+                    for x_idx in range(self.step_repeat.x_repeat):
+                        x_offset = x_idx * self.step_repeat.x_step
+                        y_offset = y_idx * self.step_repeat.y_step
+                        repeated_shape = translate(shape, xoff=x_offset, yoff=y_offset)
+                        self.layers[-1]['shapes'].append(repeated_shape)
+                        self._pending_shapes += 1
+            else:
+                self.layers[-1]['shapes'].append(shape)
+                self._pending_shapes += 1
+            
+            # Invalida cache quando aggiungiamo nuove shape
+            self._geometries_cache = None
 
     @property
     def geometries(self):
         """
         Restituisce la geometria finale composta applicando le polarità.
+        Usa lazy evaluation con cache per performance.
         """
-        # Combina i layer
-        final_shape = None
+        # Ritorna cache se disponibile
+        if self._geometries_cache is not None:
+            debug(lambda: "Returning cached geometries")
+            return self._geometries_cache
+        
+        with LogContext("Computing final geometries", level='DEBUG'):
+            # Combina i layer con batch processing
+            final_shape = None
 
-        for layer in self.layers:
-            if not layer['shapes']:
-                continue
+            for layer in self.layers:
+                if not layer['shapes']:
+                    continue
 
-            # Unisci tutte le shape del layer
-            layer_shape = unary_union(layer['shapes'])
+                debug(lambda: f"Processing layer with {len(layer['shapes'])} shapes (polarity: {layer['polarity']})")
+                # Batch unary_union per performance
+                layer_shape = self._batch_union(layer['shapes'])
+
+                if final_shape is None:
+                    if layer['polarity'] == 'dark':
+                        final_shape = layer_shape
+                else:
+                    if layer['polarity'] == 'dark':
+                        final_shape = final_shape.union(layer_shape)
+                    else:
+                        final_shape = final_shape.difference(layer_shape)
 
             if final_shape is None:
-                if layer['polarity'] == 'dark':
-                    final_shape = layer_shape
-                else:
-                    # Clear su nulla non fa nulla
-                    pass
+                self._geometries_cache = []
+                return self._geometries_cache
+
+            if isinstance(final_shape, (Polygon, LineString, Point)):
+                self._geometries_cache = [final_shape]
+            elif hasattr(final_shape, 'geoms'):
+                self._geometries_cache = list(final_shape.geoms)
             else:
-                if layer['polarity'] == 'dark':
-                    final_shape = final_shape.union(layer_shape)
-                else:
-                    final_shape = final_shape.difference(layer_shape)
-
-        if final_shape is None:
-            return []
-
-        if isinstance(final_shape, (Polygon, LineString, Point)):
-            return [final_shape]
-        elif hasattr(final_shape, 'geoms'):
-            return list(final_shape.geoms)
-        return [final_shape]
+                self._geometries_cache = [final_shape]
+            
+            info(f"Generated {len(self._geometries_cache)} final geometries")
+            return self._geometries_cache
+    
+    def _batch_union(self, shapes):
+        """Batch unary_union per ridurre overhead"""
+        if len(shapes) == 1:
+            return shapes[0]
+        
+        # Per liste grandi, unisci in batch per evitare stack overflow
+        if len(shapes) > 500:
+            debug(lambda: f"Batch union for {len(shapes)} shapes (batch_size=100)")
+            batch_size = 100
+            batches = []
+            for i in range(0, len(shapes), batch_size):
+                batch = shapes[i:i+batch_size]
+                batches.append(unary_union(batch))
+            return unary_union(batches)
+        
+        return unary_union(shapes)
 
     def parse_value(self, value_str: str, is_x: bool = True) -> float:
         fmt = self.state.format_spec
@@ -233,6 +340,14 @@ class GerberProcessor:
         if not aperture:
             return
 
+        # Controlla se è un blocco apertura (AB)
+        if self.state.current_aperture_id in self.aperture_blocks:
+            block = self.aperture_blocks[self.state.current_aperture_id]
+            shape = self._instantiate_aperture_block(block, self.state.current_point)
+            if shape:
+                self._add_shape(shape)
+            return
+
         # Controlla se è una macro
         if aperture.type not in ['C', 'R', 'O', 'P']:
             macro_name = aperture.type
@@ -242,12 +357,46 @@ class GerberProcessor:
                 self._add_shape(shape)
             else:
                 print(f"Warning: Macro '{macro_name}' not found.")
+                warning(f"Macro '{macro_name}' not found")
         else:
             # Apertura standard
             shape = self._create_flashed_shape(Point(self.state.current_point), aperture)
             self._add_shape(shape)
 
     # --- Macro Interpreter ---
+
+    def _instantiate_aperture_block(self, block: ApertureBlock, location: Tuple[float, float]):
+        """Istanzia un blocco apertura nella posizione specificata (X3)"""
+        from .parser import GerberParser
+        
+        # Crea un processor temporaneo per eseguire i comandi del blocco
+        temp_processor = GerberProcessor()
+        temp_processor.state = PlotState()
+        temp_processor.state.format_spec = self.state.format_spec
+        temp_processor.state.units = self.state.units
+        temp_processor.state.apertures = self.state.apertures
+        temp_processor.macros = self.macros
+        temp_processor.state.current_point = (0.0, 0.0)
+        
+        # Crea un parser temporaneo
+        temp_parser = GerberParser(temp_processor)
+        
+        # Esegui i comandi del blocco
+        for kind, value in block.tokens:
+            if kind == 'param':
+                temp_parser._parse_param(value)
+            elif kind == 'stmt':
+                temp_parser._parse_stmt(value)
+        
+        # Ottieni le geometrie generate
+        geometries = temp_processor.geometries
+        if not geometries:
+            return None
+        
+        # Unisci tutte le geometrie e trasla alla posizione di flash
+        combined = unary_union(geometries)
+        translated = translate(combined, xoff=location[0], yoff=location[1])
+        return translated
 
     def _instantiate_macro(self, macro: Macro, params: List[float], location: Tuple[float, float]):
         shapes_add = []
@@ -298,23 +447,82 @@ class GerberProcessor:
         return final_shape
 
     def _evaluate_expression(self, expr: str, params: List[float]) -> float:
+        """Valuta espressioni macro in modo sicuro senza eval()."""
         def replace_var(match):
             idx = int(match.group(1)) - 1
             if 0 <= idx < len(params):
                 return str(params[idx])
             return "0"
 
+        # Sostituisci variabili $1, $2, etc.
         expr_sub = re.sub(r'\$(\d+)', replace_var, expr)
-        expr_sub = expr_sub.replace('x', '*')
-        expr_sub = expr_sub.replace('X', '*')
+        # Normalizza operatori
+        expr_sub = expr_sub.replace('x', '*').replace('X', '*')
+        expr_sub = expr_sub.strip()
+
+        # Validazione: solo caratteri sicuri
+        if not re.match(r'^[\d\.\+\-\*\/\(\)\s]+$', expr_sub):
+            print(f"Warning: Invalid characters in macro expression '{expr}'")
+            return 0.0
 
         try:
-            if not re.match(r'^[\d\.\+\-\*\/\(\)\s]+$', expr_sub):
-                pass
-            return float(eval(expr_sub))
+            return self._safe_eval(expr_sub)
         except Exception as e:
-            print(f"Error evaluating macro expression '{expr}': {e}")
+            warning(f"Error evaluating macro expression '{expr}': {e}")
             return 0.0
+    
+    def _safe_eval(self, expr: str) -> float:
+        """Valuta espressioni matematiche in modo sicuro senza eval()."""
+        # Tokenize expression
+        tokens = re.findall(r'\d+\.?\d*|[+\-*/()]', expr)
+        if not tokens:
+            return 0.0
+        
+        # Shunting-yard algorithm per convertire in RPN
+        output = []
+        operators = []
+        precedence = {'+': 1, '-': 1, '*': 2, '/': 2}
+        
+        for token in tokens:
+            if re.match(r'\d+\.?\d*', token):
+                output.append(float(token))
+            elif token in precedence:
+                while (operators and operators[-1] != '(' and
+                       operators[-1] in precedence and
+                       precedence[operators[-1]] >= precedence[token]):
+                    output.append(operators.pop())
+                operators.append(token)
+            elif token == '(':
+                operators.append(token)
+            elif token == ')':
+                while operators and operators[-1] != '(':
+                    output.append(operators.pop())
+                if operators:
+                    operators.pop()  # Remove '('
+        
+        while operators:
+            output.append(operators.pop())
+        
+        # Valuta RPN
+        stack = []
+        for item in output:
+            if isinstance(item, float):
+                stack.append(item)
+            else:
+                if len(stack) < 2:
+                    return 0.0
+                b = stack.pop()
+                a = stack.pop()
+                if item == '+':
+                    stack.append(a + b)
+                elif item == '-':
+                    stack.append(a - b)
+                elif item == '*':
+                    stack.append(a * b)
+                elif item == '/':
+                    stack.append(a / b if b != 0 else 0.0)
+        
+        return stack[0] if stack else 0.0
 
     def _generate_macro_primitive(self, code: int, args: List[float]):
         try:
@@ -330,7 +538,7 @@ class GerberProcessor:
                 x2, y2 = args[4], args[5]
                 rot = args[6]
                 line = LineString([(x1, y1), (x2, y2)])
-                shape = line.buffer(w/2, cap_style=2)
+                shape = line.buffer(w/2, cap_style='square')
                 if rot != 0:
                     shape = rotate(shape, rot, origin=(0,0))
                 return shape
@@ -442,7 +650,7 @@ class GerberProcessor:
     def _create_stroked_shape(self, line: LineString, aperture: Aperture):
         if aperture.type == 'C':
             radius = aperture.params[0] / 2.0
-            return line.buffer(radius, cap_style=1)
+            return line.buffer(radius, cap_style='round')
         elif aperture.type == 'R':
             w = aperture.params[0]
             h = aperture.params[1] if len(aperture.params) > 1 else w
@@ -459,19 +667,31 @@ class GerberProcessor:
         return line.buffer(0.001)
 
     def _create_flashed_shape(self, point: Point, aperture: Aperture):
+        # Check cache first
+        cache_key = f"{aperture.id}_{aperture.type}_{','.join(map(str, aperture.params))}"
+        if cache_key in self._aperture_shape_cache:
+            cached_shape = self._aperture_shape_cache[cache_key]
+            # Translate cached shape to current point
+            return translate(cached_shape, xoff=point.x, yoff=point.y)
+        
         x, y = point.x, point.y
+        # Create shape at origin for caching
+        shape_at_origin = None
+        
         if aperture.type == 'C':
             radius = aperture.params[0] / 2.0
-            return point.buffer(radius)
+            shape_at_origin = Point(0, 0).buffer(radius)
         elif aperture.type == 'R':
             w = aperture.params[0]
             h = aperture.params[1] if len(aperture.params) > 1 else w
-            return Polygon([(x-w/2, y-h/2), (x+w/2, y-h/2), (x+w/2, y+h/2), (x-w/2, y+h/2)])
+            shape_at_origin = Polygon([(-w/2, -h/2), (w/2, -h/2), (w/2, h/2), (-w/2, h/2)])
         elif aperture.type == 'O':
              w = aperture.params[0]
              h = aperture.params[1] if len(aperture.params) > 1 else w
-             if w > h: return LineString([(x-(w-h)/2, y), (x+(w-h)/2, y)]).buffer(h/2)
-             else: return LineString([(x, y-(h-w)/2), (x, y+(h-w)/2)]).buffer(w/2)
+             if w > h: 
+                 shape_at_origin = LineString([(-((w-h)/2), 0), ((w-h)/2, 0)]).buffer(h/2)
+             else: 
+                 shape_at_origin = LineString([(0, -(h-w)/2), (0, (h-w)/2)]).buffer(w/2)
         elif aperture.type == 'P':
             # Polygon: diameter, vertices, [rotation], [hole_dia]
             dia = aperture.params[0]
@@ -480,20 +700,27 @@ class GerberProcessor:
 
             if vertices < 3:
                 print(f"Warning: Polygon aperture has {vertices} vertices, skipping.")
-                return point.buffer(0.001) # Fallback
+                return Point(x, y).buffer(0.001)
 
             radius = dia / 2
             angle_step = 2 * math.pi / vertices
             points = []
             for i in range(vertices):
                 theta = i * angle_step
-                px = x + radius * math.cos(theta)
-                py = y + radius * math.sin(theta)
+                px = radius * math.cos(theta)
+                py = radius * math.sin(theta)
                 points.append((px, py))
 
-            poly = Polygon(points)
+            shape_at_origin = Polygon(points)
             if rot != 0:
-                poly = rotate(poly, rot, origin=(x, y))
-            return poly
-
-        return point.buffer(0.1)
+                shape_at_origin = rotate(shape_at_origin, rot, origin=(0, 0))
+        else:
+            return Point(x, y).buffer(0.1)
+        
+        # Cache shape at origin
+        if shape_at_origin:
+            self._aperture_shape_cache[cache_key] = shape_at_origin
+            # Translate to actual position
+            return translate(shape_at_origin, xoff=x, yoff=y)
+        
+        return Point(x, y).buffer(0.1)

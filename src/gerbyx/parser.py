@@ -71,7 +71,11 @@ class GerberParser:
 
         if value.startswith("FS"): self.processor.set_format_spec(parse_format_spec(value))
         elif value.startswith("MO"): self.processor.set_units(parse_units(value).code)
-        elif value.startswith("AD"): self.processor.define_aperture(parse_aperture_def(value))
+        elif value.startswith("AD"):
+            try:
+                self.processor.define_aperture(parse_aperture_def(value))
+            except ValueError as e:
+                print(f"Error parsing aperture definition '{value}': {e}")
         elif value.startswith("LP"):
             polarity = parse_layer_polarity(value)
             self.processor.set_layer_polarity(polarity.mode)

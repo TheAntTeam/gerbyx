@@ -477,7 +477,10 @@ class GerberProcessor:
             dia = aperture.params[0]
             vertices = int(aperture.params[1])
             rot = aperture.params[2] if len(aperture.params) > 2 else 0.0
-            # hole_dia = aperture.params[3] if len(aperture.params) > 3 else 0.0 # TODO: Handle hole
+
+            if vertices < 3:
+                print(f"Warning: Polygon aperture has {vertices} vertices, skipping.")
+                return point.buffer(0.001) # Fallback
 
             radius = dia / 2
             angle_step = 2 * math.pi / vertices

@@ -1,36 +1,24 @@
 from dataclasses import dataclass
-
+from typing import List, Tuple
 
 @dataclass
 class ApertureBlock:
     id: str
-    body: list[str]  # primitive o statements interni al blocco
+    tokens: List[Tuple[str, str]] # Lista di (kind, value)
 
-
-def _parse_ab_start(self, value: str):
-    # value es: "AB10*" (senza i % perché il tokenizer li ha rimossi)
-    block_id = value[2:-1]  # togli "AB" e "*" finale
-    if not block_id:
-        raise ValueError("Aperture Block senza id")
-    if self.current_ap_block is not None:
-        raise ValueError(f"Nesting di AB non supportato (già in {self.current_ap_block})")
-    self.current_ap_block = block_id
-    self.aperture_blocks[block_id] = []
-
-
-def _parse_ab_end(self, value: str):
-    # value es: "ABEND*"
-    if self.current_ap_block is None:
-        raise ValueError("ABEND trovato senza blocco aperto")
-    self.current_ap_block = None
-
-
-def _collect_ab_body(self, kind: str, value: str):
+def parse_ab_start(value: str) -> str:
     """
-    Accumula qualunque token (stmt o param) dentro il blocco AB.
-    Puoi decidere se normalizzare/filtrare: qui manteniamo raw.
+    Estrae l'ID del blocco dall'inizio della definizione.
+    value es: "AB10*"
     """
-    if self.current_ap_block is None:
-        return
-    # Accumula la rappresentazione grezza: puoi raffinare in seguito
-    self.aperture_blocks[self.current_ap_block].append((kind, value))
+    # Rimuovi "AB" iniziale e "*" finale
+    if value.startswith("AB") and value.endswith("*"):
+        block_id = value[2:-1]
+        if not block_id:
+            raise ValueError("Aperture Block ID missing")
+        return block_id
+    raise ValueError(f"Invalid aperture block start: {value}")
+
+def is_ab_end(value: str) -> bool:
+    """Controlla se il valore è la fine di un blocco (ABEND*)."""
+    return value == "ABEND*"

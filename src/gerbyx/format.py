@@ -12,7 +12,7 @@ class FormatSpec:
     y_dec: int
 
 
-def _parse_format_spec(self, value: str):
+def parse_format_spec(value: str) -> FormatSpec:
     # value es: "FSLAX24Y24*"
     body = value[2:-1]  # togli "FS" e "*"
     # es: "LAX24Y24"
@@ -26,7 +26,7 @@ def _parse_format_spec(self, value: str):
 
     x_int, x_dec, y_int, y_dec = map(int, m.groups())
 
-    self.format_spec = FormatSpec(
+    return FormatSpec(
         zero_omission=zero_omission,
         coord_mode=coord_mode,
         x_int=x_int,

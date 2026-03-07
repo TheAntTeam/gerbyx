@@ -1,85 +1,82 @@
+from typing import Generator, Tuple
 
+def tokenize_gerber(text: str) -> Generator[Tuple[str, str], None, None]:
+    """
+    Tokenizza un file Gerber in modo robusto.
 
-def clean_gerber_text(text: str, in_line_comment_char: str = ';') -> str:
-    # Rimuovi newline, tab e spazi superflui
-    no_spaces = text.replace(" ", "")
-    no_comments = "\n".join([x.split(in_line_comment_char)[0].upper() for x in no_spaces.split("\n")])
-    # rimuovo i commenti G04, dato che sono complessi, li elimino utilizzando \n come
-    # terminatore del commento.
-    lines = no_comments.splitlines()
-    no_g04 = ""
-    for l in lines:
-        i = l.find("G04")
-        if i != -1:
-            nl = l[:i]
-        else:
-            nl = l
-        if nl:
-            no_g04 += nl + "\n"
-    cleaned = no_g04.replace("\n", "").replace("\r", "").replace("\t", "").strip()
-    return cleaned
+    Itera attraverso il testo cercando i delimitatori di comando ('*' e '%').
 
+    Restituisce un generatore di tuple (tipo, valore) dove:
+    - 'param': Un comando all'interno di un blocco di parametri estesi (es. 'FSLAX24Y24*').
+    - 'stmt': Un comando standard del corpo del file (es. 'G01*', 'X100Y100D02*').
+    - 'comment': Un commento G04 (es. 'G04 Questo è un commento*').
+    """
+    pos = 0
+    text_len = len(text)
 
-def tokenize_gerber(raw_text: str, in_line_comment_char: str = '#'):
+    while pos < text_len:
+        # Salta whitespace
+        while pos < text_len and text[pos].isspace():
+            pos += 1
 
-    text = clean_gerber_text(raw_text, in_line_comment_char=in_line_comment_char)
-
-    # print("text:")
-    # print(text)
-
-    i = 0
-    length = len(text)
-    macro_start = False
-    macro_body = ""
-    while i < length:
-        ch = text[i]
-        if ch == '%':
-            # cerco un * per trovare la fine del token
-            j = text.find('*', i + 1)
-            if j == -1:
-                raise ValueError("Parametro Gerber non chiuso correttamente")
-            # ho trovato un asterisco i casi ora sono 2:
-            # - il carattere successivo e' un % allora e' un parametro
-            # - il carattere successivo non e' un % allora e' l'intestazione di una macro.
-            if text[j+1] == '%':
-                # parametro
-                block = text[i + 1:j + 1]
-                if block != "*":
-                    yield ('param', block)
-                    i = j + 2
-                else:
-                    i = j + 1
-            else:
-                # macro init
-                block = text[i + 1:j + 1]
-                yield ('macro_start', block)
-                macro_start = True
-                i = j + 1
-            print("% ->", block)
-            continue
-
-        j = text.find('*', i)
-        if j == -1:
+        if pos >= text_len:
             break
-        stmt = text[i:j + 1].strip()
-        if stmt.startswith('G04'):
-            yield ('comment', stmt)
-            i = j + 1
-            continue
-        if stmt:
-            if macro_start:
-                macro_body += stmt
-                if j + 1 < length:
-                    if text[j + 1] == '%':
-                        yield ('macro_body', macro_body)
-                        print("MA ->", macro_body)
-                        macro_start = False
-                        macro_body = ""
-                        i = j + 2
-                        continue
-                else:
-                    raise ValueError("File incompleto")
+
+        # Controlla se siamo all'inizio di un blocco di parametri
+        if text[pos] == '%':
+            # Trovato un blocco di parametri. Cerca la fine del blocco.
+            end_percent_pos = text.find('%', pos + 1)
+            if end_percent_pos == -1:
+                # Blocco non chiuso, errore. Per robustezza, lo trattiamo come un blocco fino alla fine.
+                end_percent_pos = text_len
+
+            # Il contenuto del blocco è tra i due '%'
+            param_content = text[pos + 1 : end_percent_pos]
+
+            # All'interno del blocco, i comandi sono separati da '*'
+            # Li emettiamo come token 'param'
+            # Attenzione: le macro (AM) possono avere più comandi interni.
+            # Lo standard dice che i comandi estesi terminano con *.
+            # Quindi splittiamo per * e ignoriamo le parti vuote.
+
+            # Nota: split('*') rimuove i delimitatori, ma noi vogliamo mantenerli per coerenza
+            # con il resto del parser che si aspetta comandi terminati da *.
+
+            # Esempio: "FSLAX24Y24*MOMM*" -> ["FSLAX24Y24", "MOMM", ""]
+            parts = param_content.split('*')
+            for part in parts:
+                cmd = part.strip()
+                if cmd:
+                    # Aggiungiamo l'asterisco che è stato rimosso dallo split
+                    yield ('param', cmd + '*')
+
+            # Avanza il puntatore principale alla fine del blocco %...%
+            pos = end_percent_pos + 1
+
+        else:
+            # Non è un blocco di parametri, quindi è uno statement normale che finisce con '*'
+            star_pos = text.find('*', pos)
+            if star_pos == -1:
+                # Statement non terminato, prendiamo il resto del file
+                stmt = text[pos:].strip()
+                if stmt:
+                    # Potrebbe essere un G04
+                    if stmt.startswith('G04'):
+                        yield ('comment', stmt)
+                    else:
+                        yield ('stmt', stmt)
+                break # Finito
             else:
-                yield ('stmt', stmt)
-                print("stmt ->", stmt)
-        i = j + 1
+                stmt = text[pos : star_pos + 1].strip()
+
+                # Rimuoviamo newline interni che possono spezzare comandi lunghi
+                stmt = stmt.replace('\n', '').replace('\r', '')
+
+                if stmt:
+                    if stmt.startswith('G04'):
+                        yield ('comment', stmt)
+                    else:
+                        yield ('stmt', stmt)
+
+                # Avanza il puntatore principale alla fine dello statement
+                pos = star_pos + 1

@@ -6,12 +6,12 @@ class LayerPolarity:
     mode: str   # "DARK" o "CLEAR"
 
 
-def _parse_layer_polarity(self, value: str):
+def parse_layer_polarity(value: str) -> LayerPolarity:
     # value es: "LPD*" oppure "LPC*"
     body = value[2:-1]  # togli "LP" e "*"
     if body == "D":
-        self.layer_polarity = LayerPolarity("DARK")
+        return LayerPolarity("DARK")
     elif body == "C":
-        self.layer_polarity = LayerPolarity("CLEAR")
+        return LayerPolarity("CLEAR")
     else:
         raise ValueError(f"Polarity not supported: {body}")

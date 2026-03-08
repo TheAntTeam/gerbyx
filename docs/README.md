@@ -20,7 +20,7 @@ Complete documentation for the gerbyx Gerber parser library.
 
 ## 🔒 Security
 
-- [Security Policy](../SECURITY.md)
+- [Security Policy](SECURITY.md)
 - [Security Fix: eval() Vulnerability](SECURITY_FIX_EVAL.md)
 
 ---
@@ -133,7 +133,7 @@ docs/
 ### For Maintainers
 
 **Security:**
-- [Security Policy](../SECURITY.md)
+- [Security Policy](SECURITY.md)
 - [Security Fixes](SECURITY_FIX_EVAL.md)
 
 **Optimization:**

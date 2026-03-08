@@ -44,7 +44,7 @@ Comprehensive documentation is available in the [docs/](docs/) folder:
 - **[Getting Started](docs/installation.md)** - Installation and usage
 - **[Gerber X3 Support](docs/GERBER_X3_SUPPORT.md)** - X3 features and compliance
 - **[Performance](docs/OPTIMIZATION_SUMMARY.md)** - Optimization details (+6% speedup)
-- **[Security](SECURITY.md)** - Security policy and fixes
+- **[Security](docs/SECURITY.md)** - Security policy and fixes
 - **[Logging](docs/LOGGING_DOCUMENTATION.md)** - Logging system guide
 - **[Testing](docs/TESTING.md)** - Test suite documentation
 
@@ -82,7 +82,7 @@ print(f"Generated {len(geometries)} geometries")
 - ✅ Safe expression evaluator for macro expressions
 - ✅ Input validation and sanitization
 
-See [SECURITY.md](SECURITY.md) for details.
+See [docs/SECURITY.md](docs/SECURITY.md) for details.
 
 ## ⚡ Performance
 

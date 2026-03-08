@@ -8,6 +8,7 @@ import subprocess
 PROJECT_ROOT = Path(__file__).parent.parent
 
 
+
 @pytest.fixture
 def gerber_file():
     """Fixture to provide the path to the test Gerber file."""

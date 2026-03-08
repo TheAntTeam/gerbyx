@@ -1,6 +1,6 @@
 [project]
 name = "gerbyx"
-version = "0.2.1"
+version = "0.2.2"
 description = "Gerber parser that generates Shapely objects for PCB and geometries"
 readme = "README.md"
 authors = [
@@ -14,7 +14,10 @@ classifiers = [
 ]
 license-files = ["LICENSE"]
 dependencies = [
-  "typer"
+    "matplotlib",
+    "typer",
+    "Shapely",
+    "rich",
 ]
 requires-python = ">= 3.10"
 

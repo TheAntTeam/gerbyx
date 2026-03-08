@@ -292,7 +292,7 @@ constants = {
 
 ---
 
-**Data Fix:** 2024  
-**Versione:** 2.1 (Fase 2 + Security Fix)  
+**Data Fix:** 2026-03-07  
+**Versione:** 0.2.0 (Security Fix)  
 **Severity:** CRITICAL → RESOLVED  
 **CVE:** N/A (fix preventivo)

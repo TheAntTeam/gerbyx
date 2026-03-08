@@ -186,5 +186,5 @@ MIT License - See [LICENSE](../LICENSE) for details.
 
 ---
 
-**Last Updated:** 2024  
-**Version:** 2.2 (Logging + Security + Optimizations)
+**Last Updated:** 2026-03-07  
+**Version:** 0.2.0 (X3 Support + Security + Optimizations + Logging)

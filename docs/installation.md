@@ -24,12 +24,6 @@ You can either clone the public repository:
 git clone git://github.com/TheAntTeam/gerbyx
 ```
 
-Or download the [tarball](https://github.com/TheAntTeam/gerbyx/tarball/master):
-
-```sh
-curl -OJL https://github.com/TheAntTeam/gerbyx/tarball/master
-```
-
 Once you have a copy of the source, you can install it with:
 
 ```sh

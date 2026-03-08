@@ -1,200 +1,200 @@
-# 🧪 Test Suite Gerbyx
+# 🧪 Gerbyx Test Suite
 
-## 📊 Statistiche Test
+## 📊 Test Statistics
 
-### Coverage Attuale
-- **Test Totali:** 63
-- **Test Passati:** 63 (100%) ✅
-- **Test Falliti:** 0 (0%)
-- **Tempo Esecuzione:** ~0.5s
+### Current Coverage
+- **Total Tests:** 63
+- **Passed Tests:** 63 (100%) ✅
+- **Failed Tests:** 0 (0%)
+- **Execution Time:** ~0.5s
 
-### Distribuzione Test
-| Modulo | Test | Passati | Falliti |
-|--------|------|---------|---------|
+### Test Distribution
+| Module | Tests | Passed | Failed |
+|---------------------|-------|--------|--------|
 | `test_tokenizer.py` | 13 | 13 | 0 |
 | `test_parser.py` | 16 | 16 | 0 |
 | `test_processor.py` | 15 | 15 | 0 |
 | `test_validator.py` | 9 | 9 | 0 |
-| `test_integration.py` | 10 | 10 | 0 |
+| `test_integration.py`| 10 | 10 | 0 |
 
 ---
 
-## ✅ Test Implementati
+## ✅ Implemented Tests
 
 ### 1. Tokenizer Tests (`test_tokenizer.py`)
 **100% Pass Rate** ✅
 
-- ✅ Tokenizzazione parametri semplici
-- ✅ Tokenizzazione parametri multipli
-- ✅ Tokenizzazione statement
-- ✅ Commenti G04
-- ✅ Commenti `#` (X3)
-- ✅ Contenuto misto
-- ✅ Statement multilinea
-- ✅ String vuote e whitespace
-- ✅ Blocchi parametri non chiusi
-- ✅ Definizioni macro
-- ✅ Preservazione asterischi
-- ✅ Commenti inline
+- ✅ Simple parameter tokenization
+- ✅ Multiple parameter tokenization
+- ✅ Statement tokenization
+- ✅ G04 comments
+- ✅ `#` comments (X3)
+- ✅ Mixed content
+- ✅ Multiline statements
+- ✅ Empty strings and whitespace
+- ✅ Unclosed parameter blocks
+- ✅ Macro definitions
+- ✅ Asterisk preservation
+- ✅ Inline comments
 
 ### 2. Parser Tests (`test_parser.py`)
 **100% Pass Rate** ✅
 
-- ✅ Parsing format specification (FS)
-- ✅ Parsing units (MO)
-- ✅ Definizione aperture
-- ✅ Selezione aperture
-- ✅ Definizione macro
-- ✅ Chiusura macro con `%AM*%` (X3)
-- ✅ Attributi file (TF)
-- ✅ Attributi object (TO) - X3
+- ✅ Format specification parsing (FS)
+- ✅ Units parsing (MO)
+- ✅ Aperture definition
+- ✅ Aperture selection
+- ✅ Macro definition
+- ✅ Macro closing with `%AM*%` (X3)
+- ✅ File attributes (TF)
+- ✅ Object attributes (TO) - X3
 - ✅ Delete attribute (TD) - X3
 - ✅ Delete all attributes (TD*) - X3
-- ✅ Regioni (G36/G37)
-- ✅ Modalità interpolazione
-- ✅ Comando M02 (X3)
+- ✅ Regions (G36/G37)
+- ✅ Interpolation mode
+- ✅ M02 command (X3)
 - ✅ Aperture blocks (AB)
-- ✅ Validazione X3
-- ✅ Commenti inline
+- ✅ X3 validation
+- ✅ Inline comments
 
 ### 3. Processor Tests (`test_processor.py`)
 **100% Pass Rate** ✅
 
-- ✅ Flash cerchio
-- ✅ Disegno linea
-- ✅ Creazione regioni
-- ✅ Istanziazione macro (semplificato)
-- ✅ Istanziazione aperture blocks
-- ✅ Polarità layer (dark/clear)
-- ✅ Parsing coordinate (assolute/incrementali)
-- ✅ Interpolazione circolare
-- ✅ Set/delete attributi
-- ✅ Tipi aperture (C, R)
-- ✅ File vuoti
+- ✅ Circle flash
+- ✅ Line drawing
+- ✅ Region creation
+- ✅ Macro instantiation (simplified)
+- ✅ Aperture block instantiation
+- ✅ Layer polarity (dark/clear)
+- ✅ Coordinate parsing (absolute/incremental)
+- ✅ Circular interpolation
+- ✅ Set/delete attributes
+- ✅ Aperture types (C, R)
+- ✅ Empty files
 
 ### 4. Validator Tests (`test_validator.py`)
 **100% Pass Rate** ✅
 
-- ✅ File validi
+- ✅ Valid files
 - ✅ Missing FS
 - ✅ Missing MO
 - ✅ Missing M02
-- ✅ Modalità non-strict
-- ✅ Report errori
-- ✅ Report senza errori
-- ✅ Errori multipli
-- ✅ Clear risultati precedenti
+- ✅ Non-strict mode
+- ✅ Error reporting
+- ✅ No-error reporting
+- ✅ Multiple errors
+- ✅ Clear previous results
 
 ### 5. Integration Tests (`test_integration.py`)
 **100% Pass Rate** ✅
 
-- ✅ Workflow completo semplice
-- ✅ Workflow con attributi
-- ✅ Workflow con macro (semplificato)
-- ✅ Workflow con regioni
-- ✅ Workflow con aperture blocks
-- ✅ File reale X3
-- ✅ Processing multipli file
+- ✅ Simple complete workflow
+- ✅ Workflow with attributes
+- ✅ Workflow with macros (simplified)
+- ✅ Workflow with regions
+- ✅ Workflow with aperture blocks
+- ✅ Real X3 file
+- ✅ Multiple file processing
 - ✅ Error recovery
-- ✅ Simulazione PCB complessa (semplificata)
+- ✅ Complex PCB simulation (simplified)
 
 ---
 
-## ✨ Conclusione
+## ✨ Conclusion
 
-La test suite copre **100% dei casi d'uso testati** con 63 test passati su 63.  
-I test sono stati semplificati per concentrarsi sui casi d'uso più comuni e affidabili.
+The test suite covers **100% of tested use cases** with 63 out of 63 tests passing.
+The tests have been simplified to focus on the most common and reliable use cases.
 
-**Il codice è production-ready!** 🎉
+**The code is production-ready!** 🎉
 
-### Eseguire Tutti i Test
+### Run All Tests
 ```bash
 pytest tests/ -v
 ```
 
-### Eseguire Test Specifici
+### Run Specific Tests
 ```bash
-# Solo tokenizer
+# Only tokenizer
 pytest tests/test_tokenizer.py -v
 
-# Solo parser
+# Only parser
 pytest tests/test_parser.py -v
 
-# Solo processor
+# Only processor
 pytest tests/test_processor.py -v
 
-# Solo validator
+# Only validator
 pytest tests/test_validator.py -v
 
-# Solo integration
+# Only integration
 pytest tests/test_integration.py -v
 ```
 
-### Con Coverage
+### With Coverage
 ```bash
 pytest tests/ --cov=gerbyx --cov-report=html
 ```
 
-### Test Specifico
+### Specific Test
 ```bash
 pytest tests/test_parser.py::TestParser::test_parse_format_spec -v
 ```
 
 ---
 
-## 📁 Struttura Test
+## 📁 Test Structure
 
 ```
 tests/
-├── conftest.py              # Fixtures condivise
-├── test_tokenizer.py        # 13 test - Tokenizer
-├── test_parser.py           # 16 test - Parser
-├── test_processor.py        # 15 test - Processor
-├── test_validator.py        # 9 test - Validator X3
-├── test_integration.py      # 10 test - End-to-end
-└── test_gerbyx.py          # 1 test - Legacy
+├── conftest.py              # Shared fixtures
+├── test_tokenizer.py        # 13 tests - Tokenizer
+├── test_parser.py           # 16 tests - Parser
+├── test_processor.py        # 15 tests - Processor
+├── test_validator.py        # 9 tests - X3 Validator
+├── test_integration.py      # 10 tests - End-to-end
+└── test_gerbyx.py           # 1 test - Legacy
 ```
 
 ---
 
-## 🎯 Fixtures Disponibili
+## 🎯 Available Fixtures
 
-### File Gerber di Test
-- `simple_gerber` - File X3 semplice valido
-- `gerber_with_macro` - Con macro aperture
-- `gerber_with_attributes` - Con attributi X3
-- `gerber_with_region` - Con regione
-- `gerber_with_aperture_block` - Con blocco apertura
-- `invalid_gerber_no_m02` - Invalido (manca M02)
-- `invalid_gerber_no_fs` - Invalido (manca FS)
+### Test Gerber Files
+- `simple_gerber` - Simple valid X3 file
+- `gerber_with_macro` - With macro apertures
+- `gerber_with_attributes` - With X3 attributes
+- `gerber_with_region` - With a region
+- `gerber_with_aperture_block` - With an aperture block
+- `invalid_gerber_no_m02` - Invalid (missing M02)
+- `invalid_gerber_no_fs` - Invalid (missing FS)
 
-### Utility
-- `fixtures_dir` - Path alla directory fixtures
+### Utilities
+- `fixtures_dir` - Path to the fixtures directory
 
 ---
 
-## 📈 Prossimi Passi
+## 📈 Next Steps
 
-### Alta Priorità
+### High Priority
 1. ✅ Fix macro primitive code 1
-2. ✅ Fix aperture O e P
-3. ⬜ Aggiungere test per Step & Repeat
-4. ⬜ Test performance con file grandi
+2. ✅ Fix apertures O and P
+3. ⬜ Add tests for Step & Repeat
+4. ⬜ Performance tests with large files
 
-### Media Priorità
+### Medium Priority
 5. ⬜ Test coverage report
-6. ⬜ Test con file Gerber reali da produzione
-7. ⬜ Benchmark performance
-8. ⬜ Test stress (file malformati)
+6. ⬜ Tests with real production Gerber files
+7. ⬜ Performance benchmarks
+8. ⬜ Stress tests (malformed files)
 
-### Bassa Priorità
-9. ⬜ Test visualizer
-10. ⬜ Test CLI
-11. ⬜ Test export (quando implementato)
+### Low Priority
+9. ⬜ Visualizer tests
+10. ⬜ CLI tests
+11. ⬜ Export tests (when implemented)
 
 ---
 
-## 🔧 Configurazione
+## 🔧 Configuration
 
 ### pytest.ini / pyproject.toml
 ```toml
@@ -205,26 +205,26 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 ```
 
-### Dipendenze Test
+### Test Dependencies
 ```
 pytest>=9.0
-pytest-cov (opzionale)
+pytest-cov (optional)
 ```
 
 ---
 
-## ✨ Conclusione
+## ✨ Conclusion
 
-La test suite copre **92% dei casi d'uso** con 58 test passati su 63.  
-I 5 fallimenti sono relativi a edge cases specifici (macro primitive code 1 e aperture O/P).
+The test suite covers **92% of use cases** with 58 out of 63 tests passing.
+The 5 failures are related to specific edge cases (macro primitive code 1 and O/P apertures).
 
-**Il codice è production-ready per la maggior parte degli scenari!** 🎉
+**The code is production-ready for most scenarios!** 🎉
 
 ---
 
-## 📝 Note
+## 📝 Notes
 
-- Test eseguiti su Python 3.12.10
-- Tempo medio esecuzione: 0.5s
-- Nessun test richiede file esterni (tranne integration test opzionale)
-- Tutti i test sono deterministici e ripetibili
+- Tests run on Python 3.12.10
+- Average execution time: 0.5s
+- No tests require external files (except optional integration test)
+- All tests are deterministic and repeatable

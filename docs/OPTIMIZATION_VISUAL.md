@@ -1,38 +1,38 @@
-# 🎨 Ottimizzazioni Gerbyx - Riepilogo Visuale
+# 🎨 Gerbyx Optimizations - Visual Summary
 
 ```
 ╔══════════════════════════════════════════════════════════════════════╗
 ║                   GERBYX PERFORMANCE OPTIMIZATION                    ║
-║                         FASE 1 + FASE 2 COMPLETE                     ║
+║                         PHASE 1 + PHASE 2 COMPLETE                   ║
 ╚══════════════════════════════════════════════════════════════════════╝
 ```
 
-## 📊 Performance Prima vs Dopo
+## 📊 Performance Before vs After
 
 ```
-File Medio (272 KB - copper_top.gbr)
+Medium File (272 KB - copper_top.gbr)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-BASELINE (Fase 0)
+BASELINE (Phase 0)
 ████████████████████████████████████████████████████  3,403 ms  100%
 
-FASE 1 (Quick Wins)
+PHASE 1 (Quick Wins)
 ███████████████████████████████████████████           2,942 ms   86%  ↓14%
 
-FASE 2 (Complex)
+PHASE 2 (Complex)
 ██████████████████████████████                        2,100 ms   62%  ↓28%
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-RISPARMIO TOTALE: 1,303 ms (1.3 secondi) - SPEEDUP: +38% ✅
+TOTAL SAVINGS: 1,303 ms (1.3 seconds) - SPEEDUP: +38% ✅
 ```
 
 ---
 
-## 🎯 Ottimizzazioni per Fase
+## 🎯 Optimizations by Phase
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│ FASE 1: QUICK WINS                                    Speedup: +14% │
+│ PHASE 1: QUICK WINS                                   Speedup: +14% │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                      │
 │  ✅ Pre-compiled Regex Patterns                                     │
@@ -52,7 +52,7 @@ RISPARMIO TOTALE: 1,303 ms (1.3 secondi) - SPEEDUP: +38% ✅
 └─────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────┐
-│ FASE 2: COMPLEX OPTIMIZATIONS                         Speedup: +28% │
+│ PHASE 2: COMPLEX OPTIMIZATIONS                        Speedup: +28% │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                      │
 │  ✅ Command Lookup Table                                            │
@@ -75,197 +75,197 @@ RISPARMIO TOTALE: 1,303 ms (1.3 secondi) - SPEEDUP: +38% ✅
 
 ---
 
-## 📈 Breakdown Dettagliato
+## 📈 Detailed Breakdown
 
 ```
-PARSING (53% → 43% del tempo totale)
+PARSING (53% → 43% of total time)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Regex Compilation
-  Prima:  326 ms  ████████████████████████████████████████
-  Dopo:    33 ms  ████                                      -90% ✅
+  Before: 326 ms  ████████████████████████████████████████
+  After:   33 ms  ████                                      -90% ✅
 
 Command Dispatch
-  Prima:  189 ms  ████████████████████████
-  Dopo:   140 ms  █████████████████         -26% ✅
+  Before: 189 ms  ████████████████████████
+  After:  140 ms  █████████████████         -26% ✅
 
 Coordinate Parsing
-  Prima:  532 ms  ████████████████████████████████████████████████████████████
-  Dopo:   450 ms  ████████████████████████████████████████████████         -15% ✅
+  Before: 532 ms  ████████████████████████████████████████████████████████████
+  After:  450 ms  ████████████████████████████████████████████████         -15% ✅
 
 
-GEOMETRIES (42% → 35% del tempo totale)
+GEOMETRIES (42% → 35% of total time)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 unary_union
-  Prima:  831 ms  ████████████████████████████████████████████████████████████
-  Dopo:   665 ms  ████████████████████████████████████████████         -20% ✅
+  Before: 831 ms  ████████████████████████████████████████████████████████████
+  After:  665 ms  ████████████████████████████████████████████         -20% ✅
 
 difference
-  Prima:  516 ms  ████████████████████████████████████████
-  Dopo:   380 ms  ██████████████████████████         -26% ✅
+  Before: 516 ms  ████████████████████████████████████████
+  After:  380 ms  ██████████████████████████         -26% ✅
 
 buffer
-  Prima:  201 ms  ███████████████
-  Dopo:   180 ms  █████████████         -10% ✅
+  Before: 201 ms  ███████████████
+  After:  180 ms  █████████████         -10% ✅
 ```
 
 ---
 
-## 🎯 File Modificati
+## 🎯 Modified Files
 
 ```
 src/gerbyx/
 ├── parser.py
-│   ├── [FASE 1] + _G_CODE_PATTERN = re.compile(...)
-│   ├── [FASE 1] + _COORD_PATTERN = re.compile(...)
-│   ├── [FASE 1] + _D_CODE_PATTERN = re.compile(...)
-│   ├── [FASE 2] + _PARAM_PREFIXES = {...}
-│   ├── [FASE 2] + _PARAM_COMMANDS = {...}
-│   └── [FASE 2] ~ Fast dispatch con cmd = value[:2]
+│   ├── [PHASE 1] + _G_CODE_PATTERN = re.compile(...)
+│   ├── [PHASE 1] + _COORD_PATTERN = re.compile(...)
+│   ├── [PHASE 1] + _D_CODE_PATTERN = re.compile(...)
+│   ├── [PHASE 2] + _PARAM_PREFIXES = {...}
+│   ├── [PHASE 2] + _PARAM_COMMANDS = {...}
+│   └── [PHASE 2] ~ Fast dispatch with cmd = value[:2]
 │
 └── processor.py
-    ├── [FASE 1] + _geometries_cache: Optional[List]
-    ├── [FASE 1] + _aperture_shape_cache: Dict[str, any]
-    ├── [FASE 2] + _batch_threshold = 100
-    ├── [FASE 2] + _pending_shapes = 0
-    └── [FASE 2] + _batch_union(shapes) method
+    ├── [PHASE 1] + _geometries_cache: Optional[List]
+    ├── [PHASE 1] + _aperture_shape_cache: Dict[str, any]
+    ├── [PHASE 2] + _batch_threshold = 100
+    ├── [PHASE 2] + _pending_shapes = 0
+    └── [PHASE 2] + _batch_union(shapes) method
 
-Legenda: + = Aggiunto, ~ = Modificato
+Legend: + = Added, ~ = Modified
 ```
 
 ---
 
-## 📊 Metriche Finali
+## 📊 Final Metrics
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │                    PERFORMANCE METRICS                       │
 ├──────────────────────────────────────────────────────────────┤
 │                                                              │
-│  File Piccolo (0.6 KB)                                       │
-│  ├─ Prima:     13 ms                                         │
-│  ├─ Dopo:      18 ms                                         │
-│  └─ Speedup:   -38%  ⚠️  (overhead accettabile: 5ms)        │
+│  Small File (0.6 KB)                                         │
+│  ├─ Before:    13 ms                                         │
+│  ├─ After:     18 ms                                         │
+│  └─ Speedup:   -38%  ⚠️  (acceptable overhead: 5ms)         │
 │                                                              │
-│  File Medio (272 KB)                                         │
-│  ├─ Prima:     3,403 ms                                      │
-│  ├─ Dopo:      2,100 ms                                      │
-│  └─ Speedup:   +38%  ✅  (risparmio: 1,303 ms)              │
+│  Medium File (272 KB)                                        │
+│  ├─ Before:    3,403 ms                                      │
+│  ├─ After:     2,100 ms                                      │
+│  └─ Speedup:   +38%  ✅  (savings: 1,303 ms)                │
 │                                                              │
-│  File Grande (10 MB)                                         │
-│  ├─ Prima:     ~120 s                                        │
-│  ├─ Dopo:      ~74 s                                         │
-│  └─ Speedup:   +38%  ✅  (risparmio: 46 s)                  │
+│  Large File (10 MB)                                          │
+│  ├─ Before:    ~120 s                                        │
+│  ├─ After:     ~74 s                                         │
+│  └─ Speedup:   +38%  ✅  (savings: 46 s)                    │
 │                                                              │
 └──────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## ✅ Checklist Implementazione
+## ✅ Implementation Checklist
 
 ```
-FASE 1: QUICK WINS
+PHASE 1: QUICK WINS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 [✓] Pre-compiled regex patterns
 [✓] Lazy geometries cache
 [✓] Aperture shape cache
-[✓] Test passati (63/63)
-[✓] Documentazione completa
-[✓] Speedup verificato: +14%
+[✓] Tests passed (63/63)
+[✓] Complete documentation
+[✓] Verified speedup: +14%
 
-FASE 2: COMPLEX OPTIMIZATIONS
+PHASE 2: COMPLEX OPTIMIZATIONS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 [✓] Command lookup table
 [✓] Fast command dispatch
 [✓] Batch union method
 [✓] Pending shapes counter
-[✓] Sintassi verificata
-[✓] Documentazione completa
-[✓] Speedup verificato: +28%
+[✓] Syntax verified
+[✓] Complete documentation
+[✓] Verified speedup: +28%
 
-QUALITÀ E COMPATIBILITÀ
+QUALITY AND COMPATIBILITY
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-[✓] Nessun breaking change
+[✓] No breaking changes
 [✓] Backward compatible
-[✓] API invariata
-[✓] Test esistenti funzionano
-[✓] Nessuna dipendenza aggiuntiva
+[✓] API unchanged
+[✓] Existing tests work
+[✓] No additional dependencies
 [✓] Production-ready
 ```
 
 ---
 
-## 🚀 Prossimi Passi
+## 🚀 Next Steps
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│ FASE 3: ADVANCED OPTIMIZATIONS (OPZIONALE)                          │
+│ PHASE 3: ADVANCED OPTIMIZATIONS (OPTIONAL)                          │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                      │
 │  ⚠️  Parallel Processing                          Speedup: +30-40%  │
-│      └─ Multi-threading per batch union                             │
+│      └─ Multi-threading for batch union                             │
 │                                                                      │
 │  ⚠️  Cython Extensions                            Speedup: +50-100% │
-│      └─ Compilazione C per parsing critico                          │
+│      └─ C compilation for critical parsing                          │
 │                                                                      │
-│  ⚠️  Alternative a Shapely (pygeos)               Speedup: +100%+   │
-│      └─ Libreria 10x più veloce                                     │
+│  ⚠️  Alternatives to Shapely (pygeos)             Speedup: +100%+   │
+│      └─ 10x faster library                                          │
 │                                                                      │
-│  Status: 📋 PROPOSTA (Non implementato)                             │
-│  Priorità: 🔵 Bassa (Solo per file >100MB)                          │
-│  Effort: ⏰ 2-3 settimane                                            │
-│  Risk: ⚠️ Medio-Alto                                                 │
+│  Status: 📋 PROPOSAL (Not implemented)                              │
+│  Priority: 🔵 Low (Only for files >100MB)                           │
+│  Effort: ⏰ 2-3 weeks                                                │
+│  Risk: ⚠️ Medium-High                                                │
 │                                                                      │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 📚 Documentazione
+## 📚 Documentation
 
 ```
-OPTIMIZATION_README.md              📖 Indice principale
-OPTIMIZATION_SUMMARY.md             ⭐ Riepilogo esecutivo
-OPTIMIZATION_COMPARISON.md          📊 Confronto Fase 1 vs 2
-PERFORMANCE_ANALYSIS.md             🔍 Analisi bottleneck
-OPTIMIZATION_PHASE1_RESULTS.md      ✅ Risultati Fase 1
-OPTIMIZATION_PHASE2_COMPLETE.md     ✅ Dettagli Fase 2
-OPTIMIZATION_PHASE3_PROPOSAL.md     🚀 Proposte future
-OPTIMIZATION_VISUAL.md              🎨 Questo file
+OPTIMIZATION_README.md              📖 Main index
+OPTIMIZATION_SUMMARY.md             ⭐ Executive summary
+OPTIMIZATION_COMPARISON.md          📊 Phase 1 vs 2 comparison
+PERFORMANCE_ANALYSIS.md             🔍 Bottleneck analysis
+OPTIMIZATION_PHASE1_RESULTS.md      ✅ Phase 1 Results
+OPTIMIZATION_PHASE2_COMPLETE.md     ✅ Phase 2 Details
+OPTIMIZATION_PHASE3_PROPOSAL.md     🚀 Future proposals
+OPTIMIZATION_VISUAL.md              🎨 This file
 
-Script Utilità:
-├── check_syntax.py                 🧪 Verifica sintassi
+Utility Scripts:
+├── check_syntax.py                 🧪 Syntax verification
 ├── profile_performance.py          📊 Profiling
-└── test_optimization.py            🧪 Test ottimizzazioni
+└── test_optimization.py            🧪 Optimization tests
 ```
 
 ---
 
-## 🎉 Conclusioni
+## 🎉 Conclusions
 
 ```
 ╔══════════════════════════════════════════════════════════════════════╗
 ║                                                                      ║
-║                    ✅ OTTIMIZZAZIONI COMPLETATE                      ║
+║                    ✅ OPTIMIZATIONS COMPLETED                        ║
 ║                                                                      ║
-║  Fase 1 + Fase 2 implementate e testate                             ║
-║  Speedup totale: +38% su file medi/grandi                           ║
-║  Nessun breaking change                                             ║
+║  Phase 1 + Phase 2 implemented and tested                           ║
+║  Total speedup: +38% on medium/large files                          ║
+║  No breaking changes                                                ║
 ║  Production-ready                                                    ║
 ║                                                                      ║
-║  File Medio (272KB): 3.4s → 2.1s  (-1.3s)  ✅                       ║
-║  File Grande (10MB): 120s → 74s   (-46s)   ✅                       ║
+║  Medium File (272KB): 3.4s → 2.1s  (-1.3s)  ✅                      ║
+║  Large File (10MB): 120s → 74s     (-46s)   ✅                      ║
 ║                                                                      ║
-║  🎯 TARGET RAGGIUNTO - PRONTO PER DEPLOY                            ║
+║  🎯 TARGET REACHED - READY FOR DEPLOY                               ║
 ║                                                                      ║
 ╚══════════════════════════════════════════════════════════════════════╝
 ```
 
 ---
 
-**Versione:** 2.0 (Fase 1 + Fase 2)  
-**Status:** ✅ COMPLETATO  
-**Data:** 2024  
+**Version:** 2.0 (Phase 1 + Phase 2)
+**Status:** ✅ COMPLETED
+**Date:** 2024
 **Maintainer:** Gerbyx Team

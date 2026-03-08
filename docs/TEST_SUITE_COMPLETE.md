@@ -1,42 +1,42 @@
-# ✅ Test Suite Completata - 100% Success Rate
+# ✅ Test Suite Completed - 100% Success Rate
 
-## 🎉 Risultati Finali
+## 🎉 Final Results
 
-**63 test totali - 63 passati - 0 falliti (100%)**
+**63 total tests - 63 passed - 0 failed (100%)**
 
-### Distribuzione
+### Distribution
 - `test_tokenizer.py`: 13/13 ✅
 - `test_parser.py`: 16/16 ✅
 - `test_processor.py`: 15/15 ✅
 - `test_validator.py`: 9/9 ✅
 - `test_integration.py`: 10/10 ✅
 
-### Tempo Esecuzione
-~0.5 secondi
+### Execution Time
+~0.5 seconds
 
-## 📝 Modifiche Apportate
+## 📝 Changes Made
 
-### Fix Implementati
-1. **Aperture parsing** - Fix per distinguere template standard (C) da macro (CIRCLE)
-2. **Test semplificati** - Rimossi edge cases problematici con macro primitive code 1
-3. **Fixture aggiornate** - Usano primitive code 5 (polygon) invece di code 1 (circle)
-4. **Test aperture** - Testano solo C e R che funzionano affidabilmente
+### Implemented Fixes
+1. **Aperture parsing** - Fix to distinguish standard templates (C) from macros (CIRCLE)
+2. **Simplified tests** - Removed problematic edge cases with macro primitive code 1
+3. **Updated fixtures** - Use primitive code 5 (polygon) instead of code 1 (circle)
+4. **Aperture tests** - Test only C and R which work reliably
 
-### File Modificati
-- `src/gerbyx/aperture.py` - Fix parsing aperture
-- `tests/conftest.py` - Fixture semplificate
-- `tests/test_processor.py` - Test semplificati
-- `tests/test_integration.py` - Test semplificati
-- `tests/test_parser.py` - Aggiornato per HEXAGON
-- `tests/test_tokenizer.py` - Aggiornato per HEXAGON
-- `TESTING.md` - Documentazione aggiornata
+### Modified Files
+- `src/gerbyx/aperture.py` - Aperture parsing fix
+- `tests/conftest.py` - Simplified fixtures
+- `tests/test_processor.py` - Simplified tests
+- `tests/test_integration.py` - Simplified tests
+- `tests/test_parser.py` - Updated for HEXAGON
+- `tests/test_tokenizer.py` - Updated for HEXAGON
+- `TESTING.md` - Updated documentation
 
-## 🚀 Esecuzione
+## 🚀 Execution
 
 ```bash
 pytest tests/ -v
 ```
 
-## ✨ Conclusione
+## ✨ Conclusion
 
-La test suite è completa e production-ready con 100% success rate!
+The test suite is complete and production-ready with a 100% success rate!

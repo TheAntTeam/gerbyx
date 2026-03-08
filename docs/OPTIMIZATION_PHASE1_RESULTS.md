@@ -1,82 +1,82 @@
-# ✅ Ottimizzazioni Fase 1 - Risultati
+# ✅ Phase 1 Optimizations - Results
 
 ## 📊 Performance Comparison
 
-### File Piccolo (0.6 KB - gerber_x3_correct.gbr)
-| Metrica | Prima | Dopo | Miglioramento |
-|---------|-------|------|---------------|
+### Small File (0.6 KB - gerber_x3_correct.gbr)
+| Metric | Before | After | Improvement |
+|--------------|---------|-------|---------------|
 | Tokenization | 0.36 ms | 0.63 ms | -75% ⚠️ |
 | Parsing | 9.95 ms | 15.29 ms | -54% ⚠️ |
 | Geometries | 2.63 ms | 2.50 ms | +5% ✅ |
-| **TOTALE** | **12.94 ms** | **18.43 ms** | **-42%** ❌ |
+| **TOTAL** | **12.94 ms** | **18.43 ms** | **-42%** ❌ |
 
-### File Medio (272 KB - copper_top.gbr)
-| Metrica | Prima | Dopo | Miglioramento |
-|---------|-------|------|---------------|
+### Medium File (272 KB - copper_top.gbr)
+| Metric | Before | After | Improvement |
+|--------------|-----------|-----------|---------------|
 | Tokenization | 166.52 ms | 162.78 ms | +2% ✅ |
-| Parsing | 1,794.02 ms | 1,474.00 ms | **+18%** ✅ |
-| Geometries | 1,443.32 ms | 1,305.40 ms | **+10%** ✅ |
-| **TOTALE** | **3,403.85 ms** | **2,942.18 ms** | **+14%** ✅ |
+| Parsing | 1,794.02 ms| 1,474.00 ms| **+18%** ✅ |
+| Geometries | 1,443.32 ms| 1,305.40 ms| **+10%** ✅ |
+| **TOTAL** | **3,403.85 ms**| **2,942.18 ms**| **+14%** ✅ |
 
 ---
 
-## 🎯 Risultati
+## 🎯 Results
 
-### ✅ Successi
-1. **File Medio: +14% più veloce** (3.4s → 2.9s)
+### ✅ Successes
+1. **Medium File: +14% faster** (3.4s → 2.9s)
    - Parsing: +18% (1.8s → 1.5s)
    - Geometries: +10% (1.4s → 1.3s)
-   - **Risparmio: 461 ms**
+   - **Savings: 461 ms**
 
-2. **Geometries cache funziona**
-   - Lazy evaluation riduce overhead
-   - Cache aperture shapes efficace
+2. **Geometries cache works**
+   - Lazy evaluation reduces overhead
+   - Aperture shapes cache is effective
 
-3. **Regex pre-compilate efficaci**
-   - Riduzione chiamate a re._compile
-   - Parsing coordinate più veloce
+3. **Pre-compiled regex is effective**
+   - Reduced calls to re._compile
+   - Faster coordinate parsing
 
-### ⚠️ Regressioni
-1. **File Piccolo: -42% più lento** (13ms → 18ms)
-   - Overhead delle ottimizzazioni
-   - Cache overhead > benefici per file piccoli
-   - **NON CRITICO** - 5ms assoluti trascurabili
-
----
-
-## 🔍 Analisi
-
-### Perché File Piccoli Sono Più Lenti?
-- **Cache overhead**: Inizializzazione dict, check cache
-- **Lazy evaluation overhead**: Property decorator, check None
-- **Translate overhead**: Ogni apertura richiede translate()
-
-### Perché File Medi Sono Più Veloci?
-- **Regex pre-compilate**: Beneficio su 15k+ iterazioni
-- **Cache aperture**: Riutilizzo su centinaia di flash
-- **Lazy geometries**: Riduce overhead se non serve visualizzazione
+### ⚠️ Regressions
+1. **Small File: -42% slower** (13ms → 18ms)
+   - Optimization overhead
+   - Cache overhead > benefits for small files
+   - **NOT CRITICAL** - 5ms absolute is negligible
 
 ---
 
-## 💡 Conclusioni
+## 🔍 Analysis
 
-### ✅ Obiettivo Raggiunto
-**File medi/grandi sono più veloci del 14%**
-- Target: 30% → Raggiunto: 14%
-- Buon risultato considerando che Shapely è il bottleneck principale
+### Why Are Small Files Slower?
+- **Cache overhead**: Dictionary initialization, cache checks
+- **Lazy evaluation overhead**: Property decorator, None checks
+- **Translate overhead**: Each aperture requires translate()
 
-### 📈 Proiezioni
-- File 1MB: ~10s → ~8.6s (risparmio 1.4s)
-- File 10MB: ~100s → ~86s (risparmio 14s)
-
-### 🎯 Raccomandazioni
-1. ✅ **Mantenere ottimizzazioni** - Beneficio netto positivo
-2. ⚠️ **Monitorare file piccoli** - Overhead accettabile (5ms)
-3. 🔄 **Considerare Fase 2** se serve ulteriore speedup
+### Why Are Medium Files Faster?
+- **Pre-compiled regex**: Benefit over 15k+ iterations
+- **Aperture cache**: Reuse on hundreds of flashes
+- **Lazy geometries**: Reduces overhead if visualization is not needed
 
 ---
 
-## 📝 Modifiche Implementate
+## 💡 Conclusions
+
+### ✅ Goal Achieved
+**Medium/large files are 14% faster**
+- Target: 30% → Achieved: 14%
+- Good result considering Shapely is the main bottleneck
+
+### 📈 Projections
+- 1MB file: ~10s → ~8.6s (1.4s savings)
+- 10MB file: ~100s → ~86s (14s savings)
+
+### 🎯 Recommendations
+1. ✅ **Keep optimizations** - Net positive benefit
+2. ⚠️ **Monitor small files** - Overhead is acceptable (5ms)
+3. 🔄 **Consider Phase 2** if more speedup is needed
+
+---
+
+## 📝 Implemented Changes
 
 ### 1. Pre-compiled Regex
 **File:** `parser.py`
@@ -85,34 +85,34 @@ _G_CODE_PATTERN = re.compile(r'G(\\d{2})')
 _COORD_PATTERN = re.compile(r'([XYIJ])([+-]?[\\d\\.]+)')
 _D_CODE_PATTERN = re.compile(r'D(\\d+)')
 ```
-**Beneficio:** -320ms su file medio
+**Benefit:** -320ms on medium file
 
 ### 2. Lazy Geometries
 **File:** `processor.py`
 ```python
 self._geometries_cache: Optional[List] = None
 ```
-**Beneficio:** -138ms su file medio (se non serve visualizzazione)
+**Benefit:** -138ms on medium file (if visualization is not needed)
 
 ### 3. Aperture Shape Cache
 **File:** `processor.py`
 ```python
 self._aperture_shape_cache: Dict[str, any] = {}
 ```
-**Beneficio:** Variabile (dipende da riutilizzo aperture)
+**Benefit:** Variable (depends on aperture reuse)
 
 ---
 
-## ✨ Prossimi Passi
+## ✨ Next Steps
 
-### Se Serve Ulteriore Speedup
-**Fase 2: Ottimizzazioni Medie**
-- Single regex per coordinate (target: +15%)
+### If More Speedup Is Needed
+**Phase 2: Medium Optimizations**
+- Single regex for coordinates (target: +15%)
 - Batch geometry operations (target: +20%)
-- Lookup table comandi (target: +5%)
-- **Speedup totale stimato: +40%**
+- Command lookup table (target: +5%)
+- **Estimated total speedup: +40%**
 
-### Se Performance Attuali Sono Sufficienti
-- ✅ Documentare ottimizzazioni
-- ✅ Aggiornare README con benchmark
-- ✅ Chiudere issue performance
+### If Current Performance Is Sufficient
+- ✅ Document optimizations
+- ✅ Update README with benchmarks
+- ✅ Close performance issue

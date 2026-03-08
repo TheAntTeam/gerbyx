@@ -17,8 +17,8 @@
 
 #### 🔴 CRITICAL: Remote Code Execution (RCE) - FIXED
 
-**CVE:** N/A (preventive fix)  
-**Severity:** CRITICAL (CVSS 9.8)  
+**CVE:** N/A (preventive fix)
+**Severity:** CRITICAL (CVSS 9.8)
 **Status:** ✅ RESOLVED in v0.2.0
 
 **Vulnerability:**
@@ -124,23 +124,23 @@ python test_safe_eval.py
 ## Known Security Considerations
 
 ### 1. File Parsing
-**Risk:** Malformed Gerber files could cause crashes  
-**Mitigation:** Robust error handling, input validation  
+**Risk:** Malformed Gerber files could cause crashes
+**Mitigation:** Robust error handling, input validation
 **Status:** ✅ Implemented
 
 ### 2. Memory Usage
-**Risk:** Large files could cause memory exhaustion  
-**Mitigation:** Streaming processing, file size limits  
+**Risk:** Large files could cause memory exhaustion
+**Mitigation:** Streaming processing, file size limits
 **Status:** ⚠️ Partial (batch processing implemented)
 
 ### 3. Regular Expressions
-**Risk:** ReDoS (Regular Expression Denial of Service)  
-**Mitigation:** Pre-compiled patterns, simple regex  
+**Risk:** ReDoS (Regular Expression Denial of Service)
+**Mitigation:** Pre-compiled patterns, simple regex
 **Status:** ✅ Implemented
 
 ### 4. Dependency Vulnerabilities
-**Risk:** Vulnerable dependencies (Shapely, etc.)  
-**Mitigation:** Regular updates, security scanning  
+**Risk:** Vulnerable dependencies (Shapely, etc.)
+**Mitigation:** Regular updates, security scanning
 **Status:** ⚠️ Manual (automated scanning recommended)
 
 ---
@@ -206,23 +206,23 @@ dependency-check --project gerbyx --scan .
 ### Attack Vectors
 
 #### 1. Malicious Gerber Files
-**Threat:** Code injection via macro expressions  
-**Mitigation:** Safe expression evaluator  
+**Threat:** Code injection via macro expressions
+**Mitigation:** Safe expression evaluator
 **Status:** ✅ MITIGATED
 
 #### 2. Large Files (DoS)
-**Threat:** Memory exhaustion, CPU overload  
-**Mitigation:** File size limits, batch processing  
+**Threat:** Memory exhaustion, CPU overload
+**Mitigation:** File size limits, batch processing
 **Status:** ⚠️ PARTIAL
 
 #### 3. Path Traversal
-**Threat:** Access to files outside working directory  
-**Mitigation:** Path validation (if file I/O added)  
+**Threat:** Access to files outside working directory
+**Mitigation:** Path validation (if file I/O added)
 **Status:** N/A (no file I/O currently)
 
 #### 4. Dependency Vulnerabilities
-**Threat:** Vulnerable third-party libraries  
-**Mitigation:** Regular updates, scanning  
+**Threat:** Vulnerable third-party libraries
+**Mitigation:** Regular updates, scanning
 **Status:** ⚠️ MANUAL
 
 ---
@@ -241,35 +241,7 @@ dependency-check --project gerbyx --scan .
 
 ---
 
-## Compliance
-
-### Standards
-- **OWASP Top 10:** Addressed
-- **CWE Top 25:** Reviewed
-- **SANS Top 25:** Reviewed
-
-### Certifications
-- None currently (planned for v3.0)
-
----
-
-## Contact
-
-### Security Team
-- **Email:** [To be added]
-- **PGP Key:** [To be added]
-- **Response Time:** 24-48 hours
-
-### General Contact
-- **GitHub Issues:** For non-security bugs
-- **Discussions:** For questions
-
----
-
 ## Acknowledgments
-
-### Security Researchers
-- [Your name] - eval() vulnerability identification and fix
 
 ### Tools Used
 - Bandit - Python security linter
@@ -284,6 +256,6 @@ This security policy is part of the gerbyx project and is licensed under the MIT
 
 ---
 
-**Last Updated:** 2026-03-07  
-**Version:** 0.2.0  
+**Last Updated:** 2026-03-07
+**Version:** 0.2.0
 **Status:** ✅ SECURE

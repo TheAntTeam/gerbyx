@@ -1,45 +1,45 @@
-# 📚 Documentazione Ottimizzazioni Gerbyx
+# 📚 Gerbyx Optimization Documentation
 
-Questa directory contiene la documentazione completa delle ottimizzazioni di performance implementate in gerbyx.
+This directory contains the complete documentation of the performance optimizations implemented in gerbyx.
 
 ---
 
-## 📖 Indice Documenti
+## 📖 Document Index
 
-### 🎯 Documenti Principali
+### 🎯 Main Documents
 
 1. **[OPTIMIZATION_SUMMARY.md](OPTIMIZATION_SUMMARY.md)** ⭐ START HERE
-   - Riepilogo esecutivo
-   - Risultati finali
-   - Metriche principali
-   - **Leggi questo per primo!**
+   - Executive summary
+   - Final results
+   - Key metrics
+   - **Read this first!**
 
 2. **[OPTIMIZATION_COMPARISON.md](OPTIMIZATION_COMPARISON.md)**
-   - Confronto Fase 1 vs Fase 2
-   - Breakdown dettagliato
-   - Quando usare quale fase
+   - Phase 1 vs Phase 2 comparison
+   - Detailed breakdown
+   - When to use which phase
 
-### 🔍 Analisi e Risultati
+### 🔍 Analysis and Results
 
 3. **[PERFORMANCE_ANALYSIS.md](PERFORMANCE_ANALYSIS.md)**
-   - Analisi bottleneck iniziale
-   - Profiling dettagliato
-   - Identificazione problemi
+   - Initial bottleneck analysis
+   - Detailed profiling
+   - Problem identification
 
 4. **[OPTIMIZATION_PHASE1_RESULTS.md](OPTIMIZATION_PHASE1_RESULTS.md)**
-   - Risultati Fase 1 (Quick Wins)
-   - Speedup +14%
-   - Benchmark prima/dopo
+   - Phase 1 Results (Quick Wins)
+   - +14% speedup
+   - Before/after benchmarks
 
 5. **[OPTIMIZATION_PHASE2_COMPLETE.md](OPTIMIZATION_PHASE2_COMPLETE.md)**
-   - Dettagli Fase 2 (Complex)
-   - Speedup +28%
-   - Implementazione tecnica
+   - Phase 2 Details (Complex)
+   - +28% speedup
+   - Technical implementation
 
-### 🚀 Future Ottimizzazioni
+### 🚀 Future Optimizations
 
 6. **[OPTIMIZATION_PHASE3_PROPOSAL.md](OPTIMIZATION_PHASE3_PROPOSAL.md)**
-   - Proposte per Fase 3 (Opzionale)
+   - Proposals for Phase 3 (Optional)
    - Parallel processing
    - Cython extensions
    - pygeos integration
@@ -48,63 +48,63 @@ Questa directory contiene la documentazione completa delle ottimizzazioni di per
 
 ## 🎯 Quick Start
 
-### Per Utenti
+### For Users
 ```python
-# Le ottimizzazioni sono già attive!
+# Optimizations are already active!
 from gerbyx import GerberProcessor, GerberParser
 from gerbyx.tokenizer import tokenize_gerber
 
-# Usa normalmente - tutto è ottimizzato
+# Use normally - everything is optimized
 processor = GerberProcessor()
 parser = GerberParser(processor)
 tokens = tokenize_gerber(gerber_source)
 parser.parse(tokens)
-geometries = processor.geometries  # +38% più veloce!
+geometries = processor.geometries  # +38% faster!
 ```
 
-### Per Sviluppatori
+### For Developers
 ```bash
-# Verifica sintassi
+# Verify syntax
 python check_syntax.py
 
-# Profiling performance
+# Performance profiling
 python profile_performance.py
 
-# Test ottimizzazioni
+# Test optimizations
 python test_optimization.py
 ```
 
 ---
 
-## 📊 Risultati in Sintesi
+## 📊 Results Summary
 
-### Performance Migliorata
+### Improved Performance
 
-| File Size | Prima | Dopo | Speedup |
-|-----------|-------|------|---------|
-| Piccolo (0.6KB) | 13ms | 18ms | -38% ⚠️ |
-| **Medio (272KB)** | **3,403ms** | **2,100ms** | **+38%** ✅ |
-| **Grande (10MB)** | **~120s** | **~74s** | **+38%** ✅ |
+| File Size | Before | After | Speedup |
+|-----------|--------|-------|---------|
+| Small (0.6KB) | 13ms | 18ms | -38% ⚠️ |
+| **Medium (272KB)** | **3,403ms** | **2,100ms** | **+38%** ✅ |
+| **Large (10MB)** | **~120s** | **~74s** | **+38%** ✅ |
 
-### Ottimizzazioni Implementate
+### Implemented Optimizations
 
-#### Fase 1: Quick Wins (+14%)
+#### Phase 1: Quick Wins (+14%)
 - ✅ Pre-compiled regex patterns
 - ✅ Lazy geometries cache
 - ✅ Aperture shape cache
 
-#### Fase 2: Complex (+28%)
+#### Phase 2: Complex (+28%)
 - ✅ Command lookup table
 - ✅ Fast command dispatch
 - ✅ Batch union for large lists
 
-**Totale:** +38% speedup
+**Total:** +38% speedup
 
 ---
 
-## 🔧 Dettagli Tecnici
+## 🔧 Technical Details
 
-### File Modificati
+### Modified Files
 
 1. **src/gerbyx/parser.py**
    - Pre-compiled regex: `_G_CODE_PATTERN`, `_COORD_PATTERN`, `_D_CODE_PATTERN`
@@ -117,15 +117,15 @@ python test_optimization.py
    - Batch union: `_batch_union()` method
    - Batch threshold: `_batch_threshold = 100`
 
-### Nessun Breaking Change
-- ✅ API invariata
+### No Breaking Changes
+- ✅ API unchanged
 - ✅ Backward compatible
-- ✅ Test esistenti funzionano
-- ✅ Nessuna dipendenza aggiuntiva
+- ✅ Existing tests work
+- ✅ No additional dependencies
 
 ---
 
-## 📈 Breakdown Performance
+## 📈 Performance Breakdown
 
 ### Parsing (53% → 43%)
 - Regex compilation: -90% ✅
@@ -139,38 +139,38 @@ python test_optimization.py
 
 ---
 
-## 🎯 Quando Usare
+## 🎯 When to Use
 
-### Fase 1 + Fase 2 (Attuale) ✅
-**Usa per:** Tutti i casi
-- File piccoli/medi/grandi
-- Performance migliorate
-- Nessun overhead significativo
-- **Raccomandato per tutti**
+### Phase 1 + Phase 2 (Current) ✅
+**Use for:** All cases
+- Small/medium/large files
+- Improved performance
+- No significant overhead
+- **Recommended for everyone**
 
-### Fase 3 (Opzionale) ⚠️
-**Considera solo se:**
-- File >100MB comuni
-- Performance critiche
-- Team ha 2-3 settimane
-- Budget per testing
+### Phase 3 (Optional) ⚠️
+**Consider only if:**
+- Files >100MB are common
+- Performance is critical
+- Team has 2-3 weeks
+- Budget for testing
 
-Vedi [OPTIMIZATION_PHASE3_PROPOSAL.md](OPTIMIZATION_PHASE3_PROPOSAL.md)
+See [OPTIMIZATION_PHASE3_PROPOSAL.md](OPTIMIZATION_PHASE3_PROPOSAL.md)
 
 ---
 
 ## 🧪 Testing
 
-### Verifica Sintassi
+### Syntax Verification
 ```bash
 python check_syntax.py
 ```
 
-Output atteso:
+Expected output:
 ```
-✓ Parser con lookup table
-✓ Processor con batch union
-✓ TUTTI I FILE HANNO SINTASSI CORRETTA
+✓ Parser with lookup table
+✓ Processor with batch union
+✓ ALL FILES HAVE CORRECT SYNTAX
 ```
 
 ### Profiling
@@ -178,7 +178,7 @@ Output atteso:
 python profile_performance.py
 ```
 
-Output atteso:
+Expected output:
 ```
 File: copper_top.gbr (272 KB)
 Tokenization: ~163 ms
@@ -189,100 +189,100 @@ TOTAL:        ~2,942 ms
 
 ---
 
-## 📚 Struttura Documenti
+## 📚 Document Structure
 
 ```
 gerbyx/
-├── OPTIMIZATION_SUMMARY.md           ⭐ Riepilogo esecutivo
-├── OPTIMIZATION_COMPARISON.md        📊 Confronto fasi
-├── PERFORMANCE_ANALYSIS.md           🔍 Analisi iniziale
-├── OPTIMIZATION_PHASE1_RESULTS.md    ✅ Risultati Fase 1
-├── OPTIMIZATION_PHASE2_COMPLETE.md   ✅ Dettagli Fase 2
-├── OPTIMIZATION_PHASE3_PROPOSAL.md   🚀 Proposte future
-├── OPTIMIZATION_README.md            📖 Questo file
-├── check_syntax.py                   🧪 Verifica sintassi
+├── OPTIMIZATION_SUMMARY.md           ⭐ Executive summary
+├── OPTIMIZATION_COMPARISON.md        📊 Phase comparison
+├── PERFORMANCE_ANALYSIS.md           🔍 Initial analysis
+├── OPTIMIZATION_PHASE1_RESULTS.md    ✅ Phase 1 Results
+├── OPTIMIZATION_PHASE2_COMPLETE.md   ✅ Phase 2 Details
+├── OPTIMIZATION_PHASE3_PROPOSAL.md   🚀 Future proposals
+├── OPTIMIZATION_README.md            📖 This file
+├── check_syntax.py                   🧪 Syntax verification
 ├── profile_performance.py            📊 Profiling
-└── test_optimization.py              🧪 Test ottimizzazioni
+└── test_optimization.py              🧪 Optimization tests
 ```
 
 ---
 
-## 🎓 Per Saperne di Più
+## 🎓 Learn More
 
-### Ordine di Lettura Consigliato
+### Recommended Reading Order
 
-1. **[OPTIMIZATION_SUMMARY.md](OPTIMIZATION_SUMMARY.md)** - Overview generale
-2. **[PERFORMANCE_ANALYSIS.md](PERFORMANCE_ANALYSIS.md)** - Capire i problemi
-3. **[OPTIMIZATION_PHASE1_RESULTS.md](OPTIMIZATION_PHASE1_RESULTS.md)** - Prime soluzioni
-4. **[OPTIMIZATION_PHASE2_COMPLETE.md](OPTIMIZATION_PHASE2_COMPLETE.md)** - Soluzioni avanzate
-5. **[OPTIMIZATION_COMPARISON.md](OPTIMIZATION_COMPARISON.md)** - Confronto completo
-6. **[OPTIMIZATION_PHASE3_PROPOSAL.md](OPTIMIZATION_PHASE3_PROPOSAL.md)** - Future direzioni
+1. **[OPTIMIZATION_SUMMARY.md](OPTIMIZATION_SUMMARY.md)** - General overview
+2. **[PERFORMANCE_ANALYSIS.md](PERFORMANCE_ANALYSIS.md)** - Understanding the problems
+3. **[OPTIMIZATION_PHASE1_RESULTS.md](OPTIMIZATION_PHASE1_RESULTS.md)** - First solutions
+4. **[OPTIMIZATION_PHASE2_COMPLETE.md](OPTIMIZATION_PHASE2_COMPLETE.md)** - Advanced solutions
+5. **[OPTIMIZATION_COMPARISON.md](OPTIMIZATION_COMPARISON.md)** - Complete comparison
+6. **[OPTIMIZATION_PHASE3_PROPOSAL.md](OPTIMIZATION_PHASE3_PROPOSAL.md)** - Future directions
 
-### Per Utenti Finali
-Leggi solo: **OPTIMIZATION_SUMMARY.md**
+### For End Users
+Read only: **OPTIMIZATION_SUMMARY.md**
 
-### Per Sviluppatori
-Leggi tutti i documenti in ordine
+### For Developers
+Read all documents in order
 
-### Per Maintainer
-Focus su: **OPTIMIZATION_PHASE2_COMPLETE.md** e **OPTIMIZATION_PHASE3_PROPOSAL.md**
+### For Maintainers
+Focus on: **OPTIMIZATION_PHASE2_COMPLETE.md** and **OPTIMIZATION_PHASE3_PROPOSAL.md**
 
 ---
 
 ## 💡 FAQ
 
-### Q: Le ottimizzazioni sono già attive?
-**A:** Sì! Fase 1 e Fase 2 sono implementate e attive di default.
+### Q: Are optimizations already active?
+**A:** Yes! Phase 1 and Phase 2 are implemented and active by default.
 
-### Q: Devo cambiare il mio codice?
-**A:** No, nessun breaking change. Il codice esistente funziona senza modifiche.
+### Q: Do I need to change my code?
+**A:** No, no breaking changes. Existing code works without modification.
 
-### Q: Perché file piccoli sono più lenti?
-**A:** Overhead delle cache (5ms). Trascurabile in pratica.
+### Q: Why are small files slower?
+**A:** Cache overhead (5ms). Negligible in practice.
 
-### Q: Devo implementare Fase 3?
-**A:** Probabilmente no. Solo se hai file >100MB e performance critiche.
+### Q: Should I implement Phase 3?
+**A:** Probably not. Only if you have files >100MB and critical performance needs.
 
-### Q: Come verifico i miglioramenti?
-**A:** Usa `profile_performance.py` per benchmark.
+### Q: How do I verify improvements?
+**A:** Use `profile_performance.py` for benchmarks.
 
-### Q: Posso disabilitare le ottimizzazioni?
-**A:** No, ma non ce n'è bisogno. Sono trasparenti e sicure.
-
----
-
-## 📞 Supporto
-
-### Problemi di Performance
-1. Esegui `profile_performance.py`
-2. Controlla dimensione file
-3. Verifica se Fase 3 è necessaria
-
-### Bug o Regressioni
-1. Verifica sintassi: `check_syntax.py`
-2. Controlla test esistenti
-3. Apri issue su GitHub
-
-### Domande
-- Consulta questa documentazione
-- Vedi esempi in `profile_performance.py`
-- Contatta maintainer
+### Q: Can I disable optimizations?
+**A:** No, but there is no need. They are transparent and safe.
 
 ---
 
-## 🎉 Conclusioni
+## 📞 Support
 
-**Le ottimizzazioni Fase 1 + Fase 2 sono:**
-- ✅ Implementate e testate
+### Performance Issues
+1. Run `profile_performance.py`
+2. Check file size
+3. Verify if Phase 3 is needed
+
+### Bugs or Regressions
+1. Verify syntax: `check_syntax.py`
+2. Check existing tests
+3. Open an issue on GitHub
+
+### Questions
+- Consult this documentation
+- See examples in `profile_performance.py`
+- Contact maintainers
+
+---
+
+## 🎉 Conclusions
+
+**Phase 1 + Phase 2 optimizations are:**
+- ✅ Implemented and tested
 - ✅ Production-ready
 - ✅ Backward compatible
-- ✅ +38% più veloci
-- ✅ Nessun breaking change
+- ✅ +38% faster
+- ✅ No breaking changes
 
-**Pronte per l'uso immediato!**
+**Ready for immediate use!**
 
 ---
 
-**Ultima modifica:** 2024
-**Versione:** 2.0 (Fase 1 + Fase 2)
-**Status:** ✅ COMPLETATO
+**Last modified:** 2024
+**Version:** 2.0 (Phase 1 + Phase 2)
+**Status:** ✅ COMPLETED

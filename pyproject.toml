@@ -29,7 +29,7 @@ test = [
 
 [project.urls]
 bugs = "https://github.com/TheAntTeam/gerbyx/issues"
-changelog = "https://github.com/TheAntTeam/gerbyx/blob/master/changelog.md"
+changelog = "https://github.com/TheAntTeam/gerbyx/blob/master/HISTORY.md"
 homepage = "https://github.com/TheAntTeam/gerbyx"
 
 [project.scripts]

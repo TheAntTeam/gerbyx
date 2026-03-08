@@ -99,7 +99,7 @@ Before you submit a pull request, check that it meets these guidelines:
 To run a subset of tests:
 
 ```sh
-pytest tests.test_gerbyx
+pytest tests\test_gerbyx.py
 ```
 
 ## Deploying

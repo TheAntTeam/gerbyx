@@ -1,13 +1,12 @@
 # gerbyx
 
 ![PyPI version](https://img.shields.io/pypi/v/gerbyx.svg)
-[![Documentation Status](https://readthedocs.org/projects/gerbyx/badge/?version=latest)](https://gerbyx.readthedocs.io/en/latest/?version=latest)
+[![Github tag](https://badgen.net/github/tag/TheAntTeam/gerbyx)](https://gitHub.com/TheAntTeam/gerbyx/tags/)
 
 Gerber parser that generates Shapely objects for PCB and geometries
 
 * PyPI package: https://pypi.org/project/gerbyx/
 * Free software: MIT License
-* Documentation: https://gerbyx.readthedocs.io.
 
 ## Features
 

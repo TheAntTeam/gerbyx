@@ -1,15 +1,18 @@
+import pytest
+import sys
 import json
 from pathlib import Path
 import subprocess
-import pytest
 
 # Define the root of the project
 PROJECT_ROOT = Path(__file__).parent.parent
+
 
 @pytest.fixture
 def gerber_file():
     """Fixture to provide the path to the test Gerber file."""
     return PROJECT_ROOT / "data" / "copper_top.gbr"
+
 
 def test_cli_geojson_export(gerber_file, tmp_path):
     """Test that the CLI can export a GeoJSON file."""
@@ -17,7 +20,7 @@ def test_cli_geojson_export(gerber_file, tmp_path):
 
     # Run the CLI command
     command = [
-        "python",
+        sys.executable,
         "-m",
         "gerbyx.cli",
         str(gerber_file),

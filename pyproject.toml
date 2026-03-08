@@ -1,6 +1,6 @@
 [project]
 name = "gerbyx"
-version = "0.1.0"
+version = "0.2.0"
 description = "Gerber parser that generates Shapely objects for PCB and geometries"
 readme = "README.md"
 authors = [
@@ -12,7 +12,7 @@ maintainers = [
 classifiers = [
     # TODO
 ]
-license = {text = "MIT"}
+license-files = ["LICENSE"]
 dependencies = [
   "typer"
 ]

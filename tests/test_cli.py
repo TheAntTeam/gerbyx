@@ -1,5 +1,6 @@
 import pytest
 import sys
+import os
 import json
 from pathlib import Path
 import subprocess
@@ -7,17 +8,22 @@ import subprocess
 # Define the root of the project
 PROJECT_ROOT = Path(__file__).parent.parent
 
-
-
 @pytest.fixture
 def gerber_file():
     """Fixture to provide the path to the test Gerber file."""
     return PROJECT_ROOT / "data" / "copper_top.gbr"
 
-
 def test_cli_geojson_export(gerber_file, tmp_path):
     """Test that the CLI can export a GeoJSON file."""
     output_file = tmp_path / "output.geojson"
+
+    # Add src to PYTHONPATH for the subprocess
+    env = os.environ.copy()
+    src_path = str(PROJECT_ROOT / "src")
+    if "PYTHONPATH" in env:
+        env["PYTHONPATH"] = f"{src_path}{os.pathsep}{env['PYTHONPATH']}"
+    else:
+        env["PYTHONPATH"] = src_path
 
     # Run the CLI command
     command = [
@@ -29,7 +35,7 @@ def test_cli_geojson_export(gerber_file, tmp_path):
         str(output_file),
     ]
 
-    result = subprocess.run(command, capture_output=True, text=True, cwd=PROJECT_ROOT)
+    result = subprocess.run(command, capture_output=True, text=True, cwd=PROJECT_ROOT, env=env)
 
     # Check that the command ran successfully
     assert result.returncode == 0, f"CLI command failed with error: {result.stderr}"

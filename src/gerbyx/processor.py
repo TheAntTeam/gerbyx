@@ -82,22 +82,16 @@ class GerberProcessor:
         if attr_type == 'object':
             self.state.object_attributes.pop(name, None)
         elif attr_type == 'aperture':
-            if self.state.current_aperture_id:
-                if self.state.current_aperture_id in self.aperture_attributes:
-                    self.aperture_attributes[self.state.current_aperture_id].pop(name, None)
-            else:
-                self._pending_aperture_attributes.pop(name, None)
+            # Modifica: TD cancella solo i pending, NON tocca le aperture già definite
+            self._pending_aperture_attributes.pop(name, None)
 
     def delete_attributes(self, attr_type: Literal['file', 'layer', 'aperture', 'object']):
         """Cancella tutti gli attributi di un tipo (X3: TD)"""
         if attr_type == 'object':
             self.state.object_attributes.clear()
         elif attr_type == 'aperture':
-            if self.state.current_aperture_id:
-                if self.state.current_aperture_id in self.aperture_attributes:
-                    self.aperture_attributes[self.state.current_aperture_id].clear()
-            else:
-                self._pending_aperture_attributes.clear()
+            # Modifica: TD cancella solo i pending.
+            self._pending_aperture_attributes.clear()
 
     def set_format_spec(self, format_spec: FormatSpec):
         self.state.format_spec = format_spec
@@ -609,6 +603,12 @@ class GerberProcessor:
 
             elif code == 5: # Polygon (Regular)
                 vertices = int(args[1])
+
+                # FIX: Avoid division by zero if vertices < 3
+                if vertices < 3:
+                    print(f"Warning: Polygon aperture has {vertices} vertices, skipping.")
+                    return None
+
                 cx = args[2]
                 cy = args[3]
                 dia = args[4]

@@ -18,9 +18,13 @@ def tokenize_gerber(text: str) -> Generator[Tuple[str, str], None, None]:
     lines = text.split('\n')
     cleaned_lines = []
     for line in lines:
-        # Rimuovi commenti # ma mantieni il resto della linea
-        if '#' in line:
-            line = line.split('#')[0]
+        # X3: Le righe che iniziano con # sono commenti.
+        # Rimuoviamole interamente.
+        if line.lstrip().startswith('#'):
+            line = ""
+        # NOTA: Non rimuoviamo commenti inline con # (es. "X100#comment") in questo modo grezzo
+        # perché romperebbe i comandi G04 di KiCad (es. "G04 #@! TF...*") rimuovendo l'asterisco finale.
+
         cleaned_lines.append(line)
     text = '\n'.join(cleaned_lines)
 

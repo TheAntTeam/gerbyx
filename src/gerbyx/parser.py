@@ -91,6 +91,9 @@ class GerberParser:
         self._finalize_ab()
 
     def _parse_param(self, value: str):
+        # NOTA: Non rimuovere l'asterisco globale qui perché FS, MO, AD, LP
+        # si aspettano l'asterisco per il loro parsing interno (body = value[2:-1]).
+
         if value.startswith("AB"):
             if is_ab_end(value):
                 pass
@@ -128,26 +131,41 @@ class GerberParser:
             polarity = parse_layer_polarity(value)
             self.processor.set_layer_polarity(polarity.mode)
         elif cmd == "TF" and value[2] == '.': # File Attributes
-            parts = value[3:].split(',', 1)
+            # TF.Name,Val*
+            content = value[3:]
+            if content.endswith('*'): content = content[:-1]
+            parts = content.split(',', 1)
             self.processor.set_attribute('file', parts[0], parts[1] if len(parts) > 1 else "")
         elif cmd == "TA" and value[2] == '.': # Aperture Attributes
-            parts = value[3:].split(',', 1)
+            # TA.Name,Val*
+            content = value[3:]
+            if content.endswith('*'): content = content[:-1]
+            parts = content.split(',', 1)
             self.processor.set_attribute('aperture', parts[0], parts[1] if len(parts) > 1 else "")
         elif cmd == "TO" and value[2] == '.': # Object Attributes (Layer/Component - X3)
-            parts = value[3:].split(',', 1)
+            # TO.Name,Val*
+            content = value[3:]
+            if content.endswith('*'): content = content[:-1]
+            parts = content.split(',', 1)
             self.processor.set_attribute('object', parts[0], parts[1] if len(parts) > 1 else "")
         elif cmd == "TD": # Delete Attributes (X3)
-            if value == "TD*":
+            if value == "TD*" or value == "TD":
                 self.processor.delete_attributes('object')
                 self.processor.delete_attributes('aperture')
             elif value[2] == '.':
-                name = value[3:-1]
+                # TD.Name*
+                content = value[3:]
+                if content.endswith('*'): content = content[:-1]
+                name = content
                 self.processor.delete_attribute('object', name)
                 self.processor.delete_attribute('aperture', name)
 
     def _parse_step_repeat(self, value: str):
         """Parse Step & Repeat command (SR)"""
-        body = value[2:-1]
+        # SR...* -> body
+        # value qui HA l'asterisco perché non l'abbiamo rimosso in _parse_param
+        body = value[2:]
+        if body.endswith('*'): body = body[:-1]
 
         if not body:
             debug(lambda: "Disabling Step & Repeat")

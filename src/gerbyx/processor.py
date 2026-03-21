@@ -31,17 +31,20 @@ class GerberProcessor:
         self.file_attributes: Dict[str, str] = {}
         self.layer_attributes: Dict[str, str] = {}
         self.aperture_attributes: Dict[str, Dict[str, str]] = {}
-        
+
+        # Attributi apertura pendenti (definiti prima di ADD/Select)
+        self._pending_aperture_attributes: Dict[str, str] = {}
+
         # Cache for lazy geometry computation
         self._geometries_cache: Optional[List] = None
-        
+
         # Cache for aperture shapes (performance optimization)
         self._aperture_shape_cache: Dict[str, any] = {}
-        
+
         # Batch processing threshold
         self._batch_threshold = 100
         self._pending_shapes = 0
-        
+
         # Step & Repeat state
         self.step_repeat: Optional[StepRepeat] = None
 
@@ -52,7 +55,7 @@ class GerberProcessor:
             debug(lambda: f"Step & Repeat enabled: {step_repeat.x_repeat}x{step_repeat.y_repeat}")
         else:
             debug(lambda: "Step & Repeat disabled")
-    
+
     def set_units(self, units: str):
         self.state.units = Units(units)
 
@@ -66,27 +69,35 @@ class GerberProcessor:
             self.state.object_attributes[name] = value
         elif attr_type == 'aperture':
             if self.state.current_aperture_id:
+                # Applica direttamente all'apertura corrente
                 if self.state.current_aperture_id not in self.aperture_attributes:
                     self.aperture_attributes[self.state.current_aperture_id] = {}
                 self.aperture_attributes[self.state.current_aperture_id][name] = value
             else:
-                print(f"Warning: Aperture attribute {name}={value} set without active aperture.")
+                # Nessuna apertura attiva, salva come pendente per la prossima definizione
+                self._pending_aperture_attributes[name] = value
 
     def delete_attribute(self, attr_type: Literal['file', 'layer', 'aperture', 'object'], name: str):
         """Cancella un attributo specifico (X3: TD.Nome)"""
         if attr_type == 'object':
             self.state.object_attributes.pop(name, None)
-        elif attr_type == 'aperture' and self.state.current_aperture_id:
-            if self.state.current_aperture_id in self.aperture_attributes:
-                self.aperture_attributes[self.state.current_aperture_id].pop(name, None)
+        elif attr_type == 'aperture':
+            if self.state.current_aperture_id:
+                if self.state.current_aperture_id in self.aperture_attributes:
+                    self.aperture_attributes[self.state.current_aperture_id].pop(name, None)
+            else:
+                self._pending_aperture_attributes.pop(name, None)
 
     def delete_attributes(self, attr_type: Literal['file', 'layer', 'aperture', 'object']):
         """Cancella tutti gli attributi di un tipo (X3: TD)"""
         if attr_type == 'object':
             self.state.object_attributes.clear()
-        elif attr_type == 'aperture' and self.state.current_aperture_id:
-            if self.state.current_aperture_id in self.aperture_attributes:
-                self.aperture_attributes[self.state.current_aperture_id].clear()
+        elif attr_type == 'aperture':
+            if self.state.current_aperture_id:
+                if self.state.current_aperture_id in self.aperture_attributes:
+                    self.aperture_attributes[self.state.current_aperture_id].clear()
+            else:
+                self._pending_aperture_attributes.clear()
 
     def set_format_spec(self, format_spec: FormatSpec):
         self.state.format_spec = format_spec
@@ -94,6 +105,16 @@ class GerberProcessor:
     def define_aperture(self, aperture: Aperture):
         debug(lambda: f"Defining aperture {aperture.id}: {aperture.type} {aperture.params}")
         self.state.apertures[aperture.id] = aperture
+
+        # Se ci sono attributi pendenti, applicali a questa nuova apertura
+        if self._pending_aperture_attributes:
+            if aperture.id not in self.aperture_attributes:
+                self.aperture_attributes[aperture.id] = {}
+
+            # Copia gli attributi pendenti
+            self.aperture_attributes[aperture.id].update(self._pending_aperture_attributes)
+            # NOTA: Non cancelliamo i pendenti qui perché in Gerber un attributo TA
+            # può applicarsi a tutte le definizioni successive finché non viene cancellato (TD).
 
     def define_macro(self, macro: Macro):
         debug(lambda: f"Defining macro {macro.name} with {len(macro.body)} primitives")
@@ -106,12 +127,23 @@ class GerberProcessor:
         from .aperture import Aperture
         self.state.apertures[block.id] = Aperture(block.id, 'AB', [])
 
+        # Applica attributi pendenti anche ai blocchi
+        if self._pending_aperture_attributes:
+            if block.id not in self.aperture_attributes:
+                self.aperture_attributes[block.id] = {}
+            self.aperture_attributes[block.id].update(self._pending_aperture_attributes)
+
     def select_aperture(self, aperture_id: str):
         if aperture_id not in self.state.apertures:
             warning(f"Aperture {aperture_id} not defined")
         else:
             debug(lambda: f"Selected aperture {aperture_id}")
         self.state.current_aperture_id = aperture_id
+
+        if self._pending_aperture_attributes and aperture_id:
+             if aperture_id not in self.aperture_attributes:
+                self.aperture_attributes[aperture_id] = {}
+             self.aperture_attributes[aperture_id].update(self._pending_aperture_attributes)
 
     def set_interpolation_mode(self, mode: str):
         self.state.interpolation_mode = mode
@@ -170,7 +202,7 @@ class GerberProcessor:
             else:
                 self.layers[-1]['shapes'].append(shape)
                 self._pending_shapes += 1
-            
+
             # Invalida cache quando aggiungiamo nuove shape
             self._geometries_cache = None
 
@@ -184,7 +216,7 @@ class GerberProcessor:
         if self._geometries_cache is not None:
             debug(lambda: "Returning cached geometries")
             return self._geometries_cache
-        
+
         with LogContext("Computing final geometries", level='DEBUG'):
             # Combina i layer con batch processing
             final_shape = None
@@ -216,15 +248,15 @@ class GerberProcessor:
                 self._geometries_cache = list(final_shape.geoms)
             else:
                 self._geometries_cache = [final_shape]
-            
+
             info(f"Generated {len(self._geometries_cache)} final geometries")
             return self._geometries_cache
-    
+
     def _batch_union(self, shapes):
         """Batch unary_union per ridurre overhead"""
         if len(shapes) == 1:
             return shapes[0]
-        
+
         # Per liste grandi, unisci in batch per evitare stack overflow
         if len(shapes) > 500:
             debug(lambda: f"Batch union for {len(shapes)} shapes (batch_size=100)")
@@ -234,7 +266,7 @@ class GerberProcessor:
                 batch = shapes[i:i+batch_size]
                 batches.append(unary_union(batch))
             return unary_union(batches)
-        
+
         return unary_union(shapes)
 
     def parse_value(self, value_str: str, is_x: bool = True) -> float:
@@ -368,7 +400,7 @@ class GerberProcessor:
     def _instantiate_aperture_block(self, block: ApertureBlock, location: Tuple[float, float]):
         """Istanzia un blocco apertura nella posizione specificata (X3)"""
         from .parser import GerberParser
-        
+
         # Crea un processor temporaneo per eseguire i comandi del blocco
         temp_processor = GerberProcessor()
         temp_processor.state = PlotState()
@@ -377,22 +409,22 @@ class GerberProcessor:
         temp_processor.state.apertures = self.state.apertures
         temp_processor.macros = self.macros
         temp_processor.state.current_point = (0.0, 0.0)
-        
+
         # Crea un parser temporaneo
         temp_parser = GerberParser(temp_processor)
-        
+
         # Esegui i comandi del blocco
         for kind, value in block.tokens:
             if kind == 'param':
                 temp_parser._parse_param(value)
             elif kind == 'stmt':
                 temp_parser._parse_stmt(value)
-        
+
         # Ottieni le geometrie generate
         geometries = temp_processor.geometries
         if not geometries:
             return None
-        
+
         # Unisci tutte le geometrie e trasla alla posizione di flash
         combined = unary_union(geometries)
         translated = translate(combined, xoff=location[0], yoff=location[1])
@@ -460,6 +492,12 @@ class GerberProcessor:
         expr_sub = expr_sub.replace('x', '*').replace('X', '*')
         expr_sub = expr_sub.strip()
 
+        # Quick path for simple numbers, including negatives
+        try:
+            return float(expr_sub)
+        except ValueError:
+            pass  # Not a simple number, proceed with full parser
+
         # Validazione: solo caratteri sicuri
         if not re.match(r'^[\d\.\+\-\*\/\(\)\s]+$', expr_sub):
             print(f"Warning: Invalid characters in macro expression '{expr}'")
@@ -470,19 +508,19 @@ class GerberProcessor:
         except Exception as e:
             warning(f"Error evaluating macro expression '{expr}': {e}")
             return 0.0
-    
+
     def _safe_eval(self, expr: str) -> float:
         """Valuta espressioni matematiche in modo sicuro senza eval()."""
         # Tokenize expression
         tokens = re.findall(r'\d+\.?\d*|[+\-*/()]', expr)
         if not tokens:
             return 0.0
-        
+
         # Shunting-yard algorithm per convertire in RPN
         output = []
         operators = []
         precedence = {'+': 1, '-': 1, '*': 2, '/': 2}
-        
+
         for token in tokens:
             if re.match(r'\d+\.?\d*', token):
                 output.append(float(token))
@@ -499,10 +537,10 @@ class GerberProcessor:
                     output.append(operators.pop())
                 if operators:
                     operators.pop()  # Remove '('
-        
+
         while operators:
             output.append(operators.pop())
-        
+
         # Valuta RPN
         stack = []
         for item in output:
@@ -521,7 +559,7 @@ class GerberProcessor:
                     stack.append(a * b)
                 elif item == '/':
                     stack.append(a / b if b != 0 else 0.0)
-        
+
         return stack[0] if stack else 0.0
 
     def _generate_macro_primitive(self, code: int, args: List[float]):
@@ -673,11 +711,11 @@ class GerberProcessor:
             cached_shape = self._aperture_shape_cache[cache_key]
             # Translate cached shape to current point
             return translate(cached_shape, xoff=point.x, yoff=point.y)
-        
+
         x, y = point.x, point.y
         # Create shape at origin for caching
         shape_at_origin = None
-        
+
         if aperture.type == 'C':
             radius = aperture.params[0] / 2.0
             shape_at_origin = Point(0, 0).buffer(radius)
@@ -688,9 +726,9 @@ class GerberProcessor:
         elif aperture.type == 'O':
              w = aperture.params[0]
              h = aperture.params[1] if len(aperture.params) > 1 else w
-             if w > h: 
+             if w > h:
                  shape_at_origin = LineString([(-((w-h)/2), 0), ((w-h)/2, 0)]).buffer(h/2)
-             else: 
+             else:
                  shape_at_origin = LineString([(0, -(h-w)/2), (0, (h-w)/2)]).buffer(w/2)
         elif aperture.type == 'P':
             # Polygon: diameter, vertices, [rotation], [hole_dia]
@@ -716,11 +754,11 @@ class GerberProcessor:
                 shape_at_origin = rotate(shape_at_origin, rot, origin=(0, 0))
         else:
             return Point(x, y).buffer(0.1)
-        
+
         # Cache shape at origin
         if shape_at_origin:
             self._aperture_shape_cache[cache_key] = shape_at_origin
             # Translate to actual position
             return translate(shape_at_origin, xoff=x, yoff=y)
-        
+
         return Point(x, y).buffer(0.1)

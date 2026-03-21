@@ -30,14 +30,14 @@ class GerberParser:
         self.current_ab_tokens: list[Tuple[str, str]] = []
         self.validate_x3 = validate_x3
         self.validator = None
-        
+
         if validate_x3:
             from .validator import GerberValidator
             self.validator = GerberValidator(strict_x3=True)
 
     def parse(self, tokens: Generator[Tuple[str, str], None, None]):
         info("Starting Gerber parsing")
-        
+
         # Converti generator in lista se serve validazione
         if self.validate_x3:
             tokens_list = list(tokens)
@@ -48,7 +48,7 @@ class GerberParser:
                     warning("X3 validation failed")
                     print("\n" + self.validator.get_report())
             tokens = iter(tokens_list)
-        
+
         for kind, value in tokens:
             # X3: alcuni comandi possono essere stmt invece di param
             # Convertiamo ADD, AB, AM, LP, TA, TO, TF in param se sono stmt
@@ -57,7 +57,7 @@ class GerberParser:
                     if value.startswith(prefix):
                         kind = 'param'
                         break
-            
+
             # Gestione Aperture Block (AB)
             if self.current_ab_id:
                 if kind == 'param' and is_ab_end(value):
@@ -104,7 +104,7 @@ class GerberParser:
             if value == "AM*":
                 self._finalize_macro()
                 return
-            
+
             if self.current_macro_name:
                 self._finalize_macro()
 
@@ -115,7 +115,7 @@ class GerberParser:
 
         # Fast command dispatch using first 2 chars
         cmd = value[:2]
-        
+
         if cmd == "FS": self.processor.set_format_spec(parse_format_spec(value))
         elif cmd == "MO": self.processor.set_units(parse_units(value).code)
         elif cmd == "SR": self._parse_step_repeat(value)
@@ -139,23 +139,26 @@ class GerberParser:
         elif cmd == "TD": # Delete Attributes (X3)
             if value == "TD*":
                 self.processor.delete_attributes('object')
+                self.processor.delete_attributes('aperture')
             elif value[2] == '.':
-                self.processor.delete_attribute('object', value[3:-1])
-    
+                name = value[3:-1]
+                self.processor.delete_attribute('object', name)
+                self.processor.delete_attribute('aperture', name)
+
     def _parse_step_repeat(self, value: str):
         """Parse Step & Repeat command (SR)"""
         body = value[2:-1]
-        
+
         if not body:
             debug(lambda: "Disabling Step & Repeat")
             self.processor.set_step_repeat(None)
             return
-        
+
         m = re.match(r'X(\d+)Y(\d+)I([\d\.\+\-]+)J([\d\.\+\-]+)', body)
         if not m:
             warning(f"Invalid Step & Repeat format: {value}")
             return
-        
+
         sr = StepRepeat(
             x_repeat=int(m.group(1)),
             y_repeat=int(m.group(2)),
@@ -183,7 +186,7 @@ class GerberParser:
 
     def _parse_stmt(self, value: str):
         if value.endswith('*'): value = value[:-1]
-        
+
         # Gestione commenti inline (X3): es. "G75*G04 comment"
         if 'G04' in value:
             # Separa il comando dal commento
@@ -192,7 +195,7 @@ class GerberParser:
                 value = parts[0].strip()
             else:
                 return  # Solo commento, ignora
-        
+
         self._handle_g_code(value)
         self._handle_coordinates_and_dcode(value)
 
@@ -206,7 +209,7 @@ class GerberParser:
             elif code == '37': self.processor.end_region()
             elif code == '74': self.processor.set_quadrant_mode('Single')
             elif code == '75': self.processor.set_quadrant_mode('Multi')
-        
+
         # X3: M02 = End of File (obbligatorio)
         if 'M02' in value:
             pass  # Fine file, nessuna azione necessaria
@@ -218,12 +221,12 @@ class GerberParser:
             char = match.group(1)
             val_str = match.group(2)
             coords[char] = self.processor.parse_value(val_str, is_x=(char in ['X', 'I']))
-        
+
         x = coords.get('X')
         y = coords.get('Y')
         i = coords.get('I')
         j = coords.get('J')
-        
+
         d_match = _D_CODE_PATTERN.search(value)
         d_code = int(d_match.group(1)) if d_match else None
 

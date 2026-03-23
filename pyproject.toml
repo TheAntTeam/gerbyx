@@ -1,6 +1,6 @@
 [project]
 name = "gerbyx"
-version = "0.2.2"
+version = "0.2.3"
 description = "Gerber parser that generates Shapely objects for PCB and geometries"
 readme = "README.md"
 authors = [

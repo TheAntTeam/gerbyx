@@ -76,7 +76,7 @@ print(f"Generated {len(geometries)} geometries")
 
 ## 🔒 Security
 
-**Version 0.2.0** includes critical security fixes:
+From **Version 0.2.0** critical security fixes are included:
 - ✅ Removed `eval()` vulnerability (RCE risk eliminated)
 - ✅ Safe expression evaluator for macro expressions
 - ✅ Input validation and sanitization

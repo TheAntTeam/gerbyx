@@ -1,5 +1,11 @@
 # History
 
+## 0.2.3 (2026-03-23)
+
+### Bug Fixes
+* Robust handling of G04 comments and inline comments in tokenizer
+* Gerber X3 attribute handling and negative macro parameters
+
 ## 0.2.0 (2026-03-07)
 
 ### New Features
